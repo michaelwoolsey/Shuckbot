@@ -1,16 +1,16 @@
-import discord
-from tinydb import TinyDB, Query
-from googleapiclient.discovery import build
-from googleapiclient import errors
 import logging
+from datetime import datetime
 
-from modules import tags, imagesearch
+import discord
 
-with open("keys.txt", "r") as file:  # file format: google key, owner ID, bot client key on separate lines
+from modules import tags, imagesearch, metar
+
+with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
     googleKey = lines[0]
     ownerID = int(lines[1])
-    clientKey = lines[2]
+    avwxKey = lines[2]
+    clientKey = lines[3]
 
 imagesearch.init(googleKey)
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +43,12 @@ async def on_message(message):
         #         prefixes.update({'prefix': content[7]}, q.guild == message.guild.id)
         #         await message.channel.send("Prefix changed to " + content[7] + '.')
 
+        if content.lower().startswith("ping"):
+            now = datetime.now()
+            sent = await message.channel.send("Measuring ping...")
+            diff = sent.created_at - now
+            await sent.edit(content="Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
+
         if content.lower().startswith("help"):
             bill = client.get_user(ownerID)
             embed = discord.Embed()
@@ -73,6 +79,7 @@ async def on_message(message):
                     await tags.edit(message, ownerID)
 
                 elif arg == 'owner':
+                    args = message.clean_content.split(' ')
                     tag_owner = client.get_user(tags.owner(message))
                     if tag_owner == 0:
                         await message.channel.send("Tag **" + args[2] + "** does not exist")
@@ -85,6 +92,9 @@ async def on_message(message):
                 else:
                     await tags.get(message)
 
+        if content.lower().startswith("metar"):
+            await metar.metar(message, avwxKey)
+
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
@@ -93,5 +103,7 @@ async def on_message(message):
 
     if message.clean_content.lower() == "s":
         await imagesearch.stop(message)
+
+
 
 client.run(clientKey)
