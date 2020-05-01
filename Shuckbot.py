@@ -19,7 +19,8 @@ defaultPrefix = ';'
 commands = [
     # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server"},
     {'command': 'i/im/img <query>', 'info': "Google image searches for an image"},
-    {'command': 't/tag <tag> / t/tag add <tag> <content>', 'info': 'Access or add a tag'}
+    {'command': 't/tag <tag> / t/tag add <tag> <content>', 'info': 'Access or add a tag'},
+    {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'}
 ]
 
 client = discord.Client()
