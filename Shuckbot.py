@@ -19,8 +19,10 @@ defaultPrefix = ';'
 commands = [
     # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server"},
     {'command': 'i/im/img <query>', 'info': "Google image searches for an image"},
-    {'command': 't/tag <tag> / t/tag add <tag> <content>', 'info': 'Access or add a tag'},
-    {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'}
+    {'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag>',
+     'info': 'Access, add, edit, and remove a tag, or find its owner'},
+    {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
+    {'command': 'ping', 'info': 'pong!'}
 ]
 
 client = discord.Client()
