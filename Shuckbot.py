@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar
+from modules import tags, imagesearch, metar, imagefun
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -22,7 +22,8 @@ commands = [
     {'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag>',
      'info': 'Access, add, edit, and remove a tag, or find its owner'},
     {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
-    {'command': 'ping', 'info': 'pong!'}
+    {'command': 'ping', 'info': 'Measures Shuckbot\'s ping'},
+    {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image'}
 ]
 
 client = discord.Client()
@@ -50,7 +51,7 @@ async def on_message(message):
             now = datetime.now()
             sent = await message.channel.send("Measuring ping...")
             diff = sent.created_at - now
-            await sent.edit(content="Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
+            await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
         if content.lower().startswith("help"):
             bill = client.get_user(ownerID)
@@ -97,6 +98,9 @@ async def on_message(message):
 
         if content.lower().startswith("metar"):
             await metar.metar(message, avwxKey)
+
+        if content.lower().startswith(("holding", "hold")):
+            await imagefun.holding_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="pi" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" serverName="pi@98.234.54.127:22" autoUploadExternalChanges="true">
     <serverData>
-      <paths name="pi">
+      <paths name="pi@98.234.54.127:22">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/pi/Shuckbot" local="$PROJECT_DIR$" />
+            <mapping deploy="/home/pi/Shuckbot" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
