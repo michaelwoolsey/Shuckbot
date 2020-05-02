@@ -23,7 +23,8 @@ commands = [
      'info': 'Access, add, edit, and remove a tag, or find its owner'},
     {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
     {'command': 'ping', 'info': 'Measures Shuckbot\'s ping'},
-    {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image'}
+    {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image'},
+    {'command': 'exm/exmilitary <image URL / @user>', 'info': 'Your image will turn into Sacramento experimental hip hop band Death Grip\'s debut mixtape, Exmilitary'}
 ]
 
 client = discord.Client()
@@ -101,6 +102,9 @@ async def on_message(message):
 
         if content.lower().startswith(("holding", "hold")):
             await imagefun.holding_imagemaker(message)
+
+        if content.lower().startswith(("exm", "exmilitary")):
+            await imagefun.exmilitary_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
