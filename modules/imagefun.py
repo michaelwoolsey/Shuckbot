@@ -1,15 +1,14 @@
 import discord
-from PIL import Image
+from PIL import Image, ImageChops
 import requests
 from io import BytesIO
+import re
+import numpy as np
+from numpy import linalg
 
 
 def is_valid_filetype(str):
-	allowed_img_filetypes = ['.gif', '.jpg', 'jpeg', '.png', 'webp']
-	for i in allowed_img_filetypes:
-		if str.split("?")[0][-4:] == i:
-			return True
-	return False
+	return re.search(r".*(\.png|\.jpg|\.gif|\.jpeg|\.webp).*", str)
 
 
 # reads an image in from the sent message
@@ -75,6 +74,53 @@ async def read_image(message):
 			return
 
 
+# taken from https://hhsprings.bitbucket.io/docs/programming/examples/python/PIL/Image__class_Image.html
+# used for perspective transform
+def _create_coeff(
+		xyA1, xyA2, xyA3, xyA4,
+		xyB1, xyB2, xyB3, xyB4):
+	A = np.array([
+		[xyA1[0], xyA1[1], 1, 0, 0, 0, -xyB1[0] * xyA1[0], -xyB1[0] * xyA1[1]],
+		[0, 0, 0, xyA1[0], xyA1[1], 1, -xyB1[1] * xyA1[0], -xyB1[1] * xyA1[1]],
+		[xyA2[0], xyA2[1], 1, 0, 0, 0, -xyB2[0] * xyA2[0], -xyB2[0] * xyA2[1]],
+		[0, 0, 0, xyA2[0], xyA2[1], 1, -xyB2[1] * xyA2[0], -xyB2[1] * xyA2[1]],
+		[xyA3[0], xyA3[1], 1, 0, 0, 0, -xyB3[0] * xyA3[0], -xyB3[0] * xyA3[1]],
+		[0, 0, 0, xyA3[0], xyA3[1], 1, -xyB3[1] * xyA3[0], -xyB3[1] * xyA3[1]],
+		[xyA4[0], xyA4[1], 1, 0, 0, 0, -xyB4[0] * xyA4[0], -xyB4[0] * xyA4[1]],
+		[0, 0, 0, xyA4[0], xyA4[1], 1, -xyB4[1] * xyA4[0], -xyB4[1] * xyA4[1]],
+	], dtype=np.float32)
+	B = np.array([
+		xyB1[0],
+		xyB1[1],
+		xyB2[0],
+		xyB2[1],
+		xyB3[0],
+		xyB3[1],
+		xyB4[0],
+		xyB4[1],
+	], dtype=np.float32)
+	return linalg.solve(A, B)
+
+
+# crops the image to be a square of size size
+def square_image_crop(img, size):
+	if img.size[0] == img.size[1]:
+		img = img.resize((size, size), resample=Image.BICUBIC)
+	elif img.size[0] > img.size[1]:
+		img = img.resize((int(size * img.size[0] / img.size[1]), size), resample=Image.BICUBIC)
+		img = img.crop((((img.size[0] - size) / 2) // 1,
+						0,
+						((img.size[0] + size) / 2) // 1,
+						img.size[1]))
+	else:
+		img = img.resize((size, int(size * img.size[1] / img.size[0])), resample=Image.BICUBIC)
+		img = img.crop((0,
+						((img.size[1] - size) / 2) // 1,
+						img.size[0],
+						((img.size[1] + size) / 2) // 1))
+	return img
+
+
 async def holding_imagemaker(message):
 	sent = await message.channel.send("Processing...")
 	# holding_input_image = "https://i.imgur.com/uYkGfzu.png"
@@ -83,6 +129,7 @@ async def holding_imagemaker(message):
 
 	inner = await read_image(message)
 	if inner is None:
+		await sent.delete()
 		return
 
 	response = requests.get(holding_base_image)
@@ -90,7 +137,6 @@ async def holding_imagemaker(message):
 
 	response = requests.get(holding_mask)
 	im_mask = Image.open(BytesIO(response.content))
-
 
 	# ratio of width/height, but multiplied by 1000 and floored
 	# if its over 1000, the width is larger than the height
@@ -140,6 +186,7 @@ async def exmilitary_imagemaker(message):
 	# try loading each image
 	inner = await read_image(message)
 	if inner is None:
+		await sent.delete()
 		return
 
 	response = requests.get(exmilitary_base_image)
@@ -151,7 +198,7 @@ async def exmilitary_imagemaker(message):
 
 	im = im.resize((IM_SIZE, IM_SIZE), Image.BILINEAR)
 	im_mask = im_mask.resize((IM_SIZE, IM_SIZE), Image.BILINEAR)
-	inside_img = inner.copy()
+	inside_img = inner.copy().convert("RGBA")
 	if inner.size[0] > inner.size[1]:
 		inside_img = inside_img.resize(((int(IM_SIZE * inner.size[0] / inner.size[1]) // 1), IM_SIZE), Image.BILINEAR)
 	else:
@@ -175,3 +222,118 @@ async def exmilitary_imagemaker(message):
 
 	await sent.delete()
 	await message.channel.send(file=discord.File("exmilitary.png"))
+
+
+async def fantano_imagemaker(message):
+	sent = await message.channel.send("Processing...")
+	image_group = [("https://i.imgur.com/iitXl6v.png", "https://i.imgur.com/2uil9xz.png", (49, 28), 500, -20, 30, -30),
+				   ("https://i.imgur.com/EQSNZS4.png", "https://i.imgur.com/z2RfZkp.png", (22, 20), 475, -20, 5, -5),
+				   ("https://i.imgur.com/IlyaYTT.png", "https://i.imgur.com/gHWQJiu.png", (26, 24), 495, -30, 20, -25)] # (base image, cutout image)
+
+	number = message.id % 3
+
+	response = requests.get(image_group[number][0])
+	img = Image.open(BytesIO(response.content))
+
+	response = requests.get(image_group[number][1])
+	cutout = Image.open(BytesIO(response.content))
+
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	SIZE = image_group[number][3]
+
+	input_img = square_image_crop(input_img, SIZE).convert("RGBA")
+
+	coeff = _create_coeff(
+		(0, 0),
+		(input_img.width, 0),
+		(input_img.width, input_img.height),
+		(0, input_img.height),
+		# =>
+		(0, 0),
+		(input_img.width, image_group[number][4]),
+		(input_img.width, input_img.height + image_group[number][5]),
+		(image_group[number][6], input_img.height),
+	)
+
+	input_img = input_img.transform((SIZE, SIZE), Image.PERSPECTIVE, coeff, Image.BICUBIC)
+
+	blank = Image.new("RGBA", (1280, 720), "rgba(220,220,220,255)")
+	blank.paste(input_img, image_group[number][2], mask=input_img)
+
+	img_final = ImageChops.composite(img, blank, cutout)
+	img_final.save("fantano.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("fantano.png"))
+
+
+async def one_imagemaker(message):
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+	input_img = input_img.convert("RGBA").convert("1")
+	input_img.save("one.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("one.png"))
+
+
+async def kim_imagemaker(message):
+	kim_base_url = "https://i.imgur.com/5UIezWU.png"
+	kim_cutout_url = "https://i.imgur.com/1JlEG9R.png"
+
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	response = requests.get(kim_base_url)
+	img = Image.open(BytesIO(response.content))
+
+	response = requests.get(kim_cutout_url)
+	cutout = Image.open(BytesIO(response.content))
+
+	size = 260, 155
+
+	if input_img.width * size[1] > input_img.height * size[0]:
+		input_img = input_img.resize((int(size[1]*input_img.width/input_img.height), size[1]), Image.BILINEAR)
+		input_img = input_img.crop((int((input_img.width - (input_img.height*size[0]/size[1])) / 2),
+									0,
+									int(input_img.width - ((input_img.width - (input_img.height*size[0]/size[1])) / 2)),
+									input_img.height))
+	# elif input_img.width * size[1] <= input_img.height * size[0]:
+	else:
+		input_img = input_img.resize((size[0], int(size[0]*input_img.height/input_img.width)), Image.BILINEAR)
+		input_img = input_img.crop((0,
+									int((input_img.height - (input_img.width*size[1]/size[0]))/2),
+									input_img.width,
+									int(input_img.height - ((input_img.height - (input_img.width*size[1]/size[0]))/2))))
+
+	coeff = _create_coeff(
+		(0, 0),
+		(input_img.width, 0),
+		(input_img.width, input_img.height),
+		(0, input_img.height),
+		# =>
+		(-3, 0),
+		(input_img.width, - 19),
+		(input_img.width + 5, input_img.height - 60),
+		(0, input_img.height + 12),
+	)
+
+	input_img = input_img.transform((268, 235), Image.PERSPECTIVE, coeff, Image.BICUBIC).convert("RGBA")
+
+	blank = Image.new("RGBA", img.size, "rgba(20,20,20,255)")
+	blank.paste(input_img, (753, 202), mask=input_img)
+
+	img_final = ImageChops.composite(img, blank, cutout)
+	img_final.save("kim.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("kim.png"))

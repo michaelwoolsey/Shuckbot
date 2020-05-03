@@ -24,7 +24,10 @@ commands = [
     {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
     {'command': 'ping', 'info': 'Measures Shuckbot\'s ping'},
     {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image'},
-    {'command': 'exm/exmilitary <image URL / @user>', 'info': 'Your image will turn into Sacramento experimental hip hop band Death Grip\'s debut mixtape, Exmilitary'}
+    {'command': 'exm/exmilitary <image URL / @user>', 'info': 'Your image will turn into Sacramento based experimental hip hop band Death Grip\'s first mixtape'},
+    {'command': 'fan/fantano/review <image URL / @user>', 'info': 'Funny internet music man will review your image'},
+    {'command': 'kim <image URL / @user>', 'info': 'Your image will be applauded by the Supreme Leader of North Korea and his team'},
+    {'command': '1/1bit/one <image URL / @user>', 'info': 'Your image will be represented in 1-bit colour space'}
 ]
 
 client = discord.Client()
@@ -68,7 +71,7 @@ async def on_message(message):
         if content.lower().startswith(("img", "i", "im")) and ' ' in message.clean_content:
             await imagesearch.search(message)
 
-        if content.lower().startswith(("tag", "t")):
+        if content.lower().startswith(("tag ", "t ")):
             if ' ' not in message.clean_content:
                 await tags.syntax_error(message)
             else:
@@ -105,6 +108,15 @@ async def on_message(message):
 
         if content.lower().startswith(("exm", "exmilitary")):
             await imagefun.exmilitary_imagemaker(message)
+
+        if content.lower().startswith(("fantano", "fan", "review")):
+            await imagefun.fantano_imagemaker(message)
+
+        if content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1 ", "1\n")):
+            await imagefun.one_imagemaker(message)
+
+        if content.lower().startswith("kim"):
+            await imagefun.kim_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
