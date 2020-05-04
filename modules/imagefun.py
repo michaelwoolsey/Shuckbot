@@ -4,7 +4,9 @@ import requests
 from io import BytesIO
 import re
 import numpy as np
+from discord.ext.commands import EmojiConverter
 from numpy import linalg
+import cairosvg
 
 
 def is_valid_filetype(str):
@@ -228,7 +230,8 @@ async def fantano_imagemaker(message):
 	sent = await message.channel.send("Processing...")
 	image_group = [("https://i.imgur.com/iitXl6v.png", "https://i.imgur.com/2uil9xz.png", (49, 28), 500, -20, 30, -30),
 				   ("https://i.imgur.com/EQSNZS4.png", "https://i.imgur.com/z2RfZkp.png", (22, 20), 475, -20, 5, -5),
-				   ("https://i.imgur.com/IlyaYTT.png", "https://i.imgur.com/gHWQJiu.png", (26, 24), 495, -30, 20, -25)] # (base image, cutout image)
+				   ("https://i.imgur.com/IlyaYTT.png", "https://i.imgur.com/gHWQJiu.png", (26, 24), 495, -30, 20,
+					-25)]  # (base image, cutout image)
 
 	number = message.id % 3
 
@@ -302,18 +305,20 @@ async def kim_imagemaker(message):
 	size = 260, 155
 
 	if input_img.width * size[1] > input_img.height * size[0]:
-		input_img = input_img.resize((int(size[1]*input_img.width/input_img.height), size[1]), Image.BILINEAR)
-		input_img = input_img.crop((int((input_img.width - (input_img.height*size[0]/size[1])) / 2),
+		input_img = input_img.resize((int(size[1] * input_img.width / input_img.height), size[1]), Image.BILINEAR)
+		input_img = input_img.crop((int((input_img.width - (input_img.height * size[0] / size[1])) / 2),
 									0,
-									int(input_img.width - ((input_img.width - (input_img.height*size[0]/size[1])) / 2)),
+									int(input_img.width - (
+												(input_img.width - (input_img.height * size[0] / size[1])) / 2)),
 									input_img.height))
 	# elif input_img.width * size[1] <= input_img.height * size[0]:
 	else:
-		input_img = input_img.resize((size[0], int(size[0]*input_img.height/input_img.width)), Image.BILINEAR)
+		input_img = input_img.resize((size[0], int(size[0] * input_img.height / input_img.width)), Image.BILINEAR)
 		input_img = input_img.crop((0,
-									int((input_img.height - (input_img.width*size[1]/size[0]))/2),
+									int((input_img.height - (input_img.width * size[1] / size[0])) / 2),
 									input_img.width,
-									int(input_img.height - ((input_img.height - (input_img.width*size[1]/size[0]))/2))))
+									int(input_img.height - (
+												(input_img.height - (input_img.width * size[1] / size[0])) / 2))))
 
 	coeff = _create_coeff(
 		(0, 0),
@@ -337,3 +342,117 @@ async def kim_imagemaker(message):
 
 	await sent.delete()
 	await message.channel.send(file=discord.File("kim.png"))
+
+
+async def get_emoji(message, client):
+	sent = await message.channel.send("Processing...")
+	message2 = message.content.split(' ')
+	if message2[1][-1:] == '>':
+		url = "https://cdn.discordapp.com/emojis/" + str(message2[1][-19:-1]) + ".gif"
+		try:
+			response = requests.get(url)
+			img = Image.open(BytesIO(response.content))
+			if(len(message2) > 2):
+				try:
+					size = float(message2[2])
+					if(size > 10):
+						size = 10
+						await message.channel.send("That scale's too large! resizing to 10")
+				except ValueError:
+					await message.channel.send("Invalid scale!")
+				else:
+					img = img.resize((img.width*size, img.height*size), Image.BICUBIC)
+			img.save("emoji.gif")
+			await message.channel.send(file=discord.File("emoji.gif"))
+		except OSError:
+			url = "https://cdn.discordapp.com/emojis/" + str(message2[1][-19:-1]) + ".png"
+			response = requests.get(url)
+			img = Image.open(BytesIO(response.content))
+			if (len(message2) > 2):
+				try:
+					size = float(message2[2])
+					if (size > 12):
+						size = 12
+						await message.channel.send("That scale's too large! resizing to 12")
+				except ValueError:
+					await message.channel.send("Invalid scale!")
+				else:
+					img = img.resize((int(img.width * size), int(img.height * size)), Image.BICUBIC)
+			img.save("emoji.png")
+			await message.channel.send(file=discord.File("emoji.png"))
+	else:
+		# await message.channel.send(message.content[3].lower().encode("unicode_escape").decode() + " " + message.content[5])
+		try:
+			emoji = "https://raw.githubusercontent.com/twitter/twemoji/master/assets/svg/" + \
+					message.content[3].lower().encode("unicode_escape").decode()[-5:] + \
+					".svg"
+			try:
+				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=float(message.content[5:]))
+			except IndexError:
+				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=int(20))
+			except MemoryError:
+				sent2 = await message.channel.send("That scale's too big! Resizing to 20...")
+				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=int(20))
+				await sent2.delete()
+
+			except:
+				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=int(20))
+		except OSError:
+			await message.channel.send("There is a problem with that emoji, sorry :frowning:")
+		else:
+			await message.channel.send(file=discord.File("emoji.png"))
+			await sent.delete()
+	await sent.delete()
+
+
+async def resize_img(message):
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+	# TODO: hey finish this
+
+
+async def sort_pixels(message):
+	sent = await message.channel.send("Processing... (this might take a while)")
+	input_img = await read_image(message)
+	input_img = input_img.convert("RGBA")
+	if input_img is None:
+		await sent.delete()
+		return
+
+	MAX_SIZE = 500
+
+	def pixel_brightness(px):
+		r, g, b, a = px
+		return r + g + b
+
+	pixels = []
+	# await sent.
+	if input_img.height >= input_img.width:
+		if input_img.height > MAX_SIZE:
+			input_img = input_img.resize((int(input_img.width * MAX_SIZE / input_img.height), MAX_SIZE), Image.BICUBIC)
+	else:
+		if input_img.width > MAX_SIZE:
+			input_img = input_img.resize((MAX_SIZE, int(input_img.height * MAX_SIZE / input_img.width)), Image.BICUBIC)
+
+	for y in range(input_img.height):
+		for x in range(input_img.width):
+			temp_px = input_img.getpixel((x, y))
+			temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
+			pixels.append(temp)
+
+	pixels.sort(key=lambda tup: tup[4])
+
+	final_img = Image.new("RGBA", (input_img.width, input_img.height), "rgba(0,0,255,0)")
+	# print(len(pixels))
+	counter = 0
+	for y in range(input_img.height):
+		for x in range(input_img.width):
+			final_img.putpixel((x, y), pixels[counter][0:4])
+			counter = counter + 1
+
+	final_img.save("sorted_pixels.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("sorted_pixels.png"))

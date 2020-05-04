@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun
+from modules import tags, imagesearch, metar, imagefun, help
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -16,19 +16,6 @@ imagesearch.init(googleKey)
 logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
-commands = [
-    # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server"},
-    {'command': 'i/im/img <query>', 'info': "Google image searches for an image"},
-    {'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag>',
-     'info': 'Access, add, edit, and remove a tag, or find its owner'},
-    {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
-    {'command': 'ping', 'info': 'Measures Shuckbot\'s ping'},
-    {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image'},
-    {'command': 'exm/exmilitary <image URL / @user>', 'info': 'Your image will turn into Sacramento based experimental hip hop band Death Grip\'s first mixtape'},
-    {'command': 'fan/fantano/review <image URL / @user>', 'info': 'Funny internet music man will review your image'},
-    {'command': 'kim <image URL / @user>', 'info': 'Your image will be applauded by the Supreme Leader of North Korea and his team'},
-    {'command': '1/1bit/one <image URL / @user>', 'info': 'Your image will be represented in 1-bit colour space'}
-]
 
 client = discord.Client()
 
@@ -57,16 +44,8 @@ async def on_message(message):
             diff = sent.created_at - now
             await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
-        if content.lower().startswith("help"):
-            bill = client.get_user(ownerID)
-            embed = discord.Embed()
-            embed.title = "Shuckbot help"
-            embed.type = "rich"
-            embed.colour = discord.Color.gold()
-            for item in commands:
-                embed.add_field(name=item['command'], value=item['info'], inline=False)
-            embed.set_footer(text="Shuckbot, by billofbong", icon_url=bill.avatar_url)
-            await message.channel.send(embed=embed)
+        if content.lower().startswith(("help", "page")):
+            await help.show_help(message, client, ownerID)
 
         if content.lower().startswith(("img", "i", "im")) and ' ' in message.clean_content:
             await imagesearch.search(message)
@@ -109,7 +88,7 @@ async def on_message(message):
         if content.lower().startswith(("exm", "exmilitary")):
             await imagefun.exmilitary_imagemaker(message)
 
-        if content.lower().startswith(("fantano", "fan", "review")):
+        if content.lower().startswith(("fantano", "fan", "review", "tnd")):
             await imagefun.fantano_imagemaker(message)
 
         if content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1 ", "1\n")):
@@ -117,6 +96,12 @@ async def on_message(message):
 
         if content.lower().startswith("kim"):
             await imagefun.kim_imagemaker(message)
+
+        if content.lower().startswith("e "):
+            await imagefun.get_emoji(message, client)
+
+        if content.lower().startswith(("sort", "pixelsort", "sortpixels")):
+            await imagefun.sort_pixels(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
