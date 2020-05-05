@@ -52,6 +52,7 @@ commands = [
 	{'command': 'school <image URL / @user>', 'info': 'An even younger man will draw your image in MSPaint', 'page': 2},
 	{'command': 'lecture/lect <image URL / @user>', 'info': 'Your image will be presented to students in a lecture', 'page': 2},
 	{'command': 'tesla <image URL / @user>', 'info': 'Your image will appear in a tesla', 'page': 2},
+	{'command': 'osu <image URL / @user>', 'info': 'An osu! streamer will play your image', 'page': 2},
 	{'command': 'Page 1: ', 'info': 'General Commands', 'page': 0},
 	{'command': 'Page 2: ', 'info': 'Image editor Commands', 'page': 0},
 	{'command': 'Page 3: ', 'info': 'Image filter Commands', 'page': 0},

@@ -162,7 +162,7 @@ def rectangle_image_crop(input_img, size):
 
 
 async def holding_imagemaker(message):
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	# holding_input_image = "https://i.imgur.com/uYkGfzu.png"
 	holding_base_image = "https://i.imgur.com/0mr6e6p.jpg"
 	holding_mask = "https://i.imgur.com/DimDfNH.png"
@@ -171,6 +171,9 @@ async def holding_imagemaker(message):
 	if inner is None:
 		await sent.delete()
 		return
+
+	sent.edit(content="Processing ..")
+
 	inner = inner.convert("RGBA")
 	response = requests.get(holding_base_image)
 	im = Image.open(BytesIO(response.content))
@@ -197,6 +200,8 @@ async def holding_imagemaker(message):
 	inside_img = inside_img.rotate(17, Image.BILINEAR, expand=True)
 	inside_img.putalpha(Image.new("L", inside_img_prerotate.size, "white").rotate(17, expand=True))
 
+	sent.edit(content="Processing ...")
+
 	# the pixel position of the placed image on the background image
 	P1, P2 = 123, 232
 
@@ -215,7 +220,7 @@ async def holding_imagemaker(message):
 
 
 async def exmilitary_imagemaker(message):
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 
 	exmilitary_base_image = "https://cdn.discordapp.com/attachments/701021701529403483/706055954361352202/unknown.png"
 	exmilitary_mask_image = "https://i.imgur.com/crHKd8m.png"
@@ -228,6 +233,8 @@ async def exmilitary_imagemaker(message):
 	if inner is None:
 		await sent.delete()
 		return
+
+	sent.edit(content="Processing ..")
 
 	response = requests.get(exmilitary_base_image)
 	im = Image.open(BytesIO(response.content))
@@ -251,6 +258,8 @@ async def exmilitary_imagemaker(message):
 	masko = Image.new("L", (IM_SIZE, IM_SIZE), 110)
 	inside_img.paste(texture, mask=masko)
 
+	sent.edit(content="Processing ...")
+
 	im_final = im_mask.copy()
 	im_final.paste(inside_img, mask=im)
 	im_final = im_final.resize((IM_SIZE, IM_SIZE), Image.BILINEAR)
@@ -265,7 +274,7 @@ async def exmilitary_imagemaker(message):
 
 
 async def fantano_imagemaker(message):
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	image_group = [("https://i.imgur.com/iitXl6v.png", "https://i.imgur.com/2uil9xz.png", (49, 28), 500, -20, 30, -30),
 				   ("https://i.imgur.com/EQSNZS4.png", "https://i.imgur.com/z2RfZkp.png", (22, 20), 475, -20, 5, -5),
 				   ("https://i.imgur.com/IlyaYTT.png", "https://i.imgur.com/gHWQJiu.png", (26, 24), 495, -30, 20,
@@ -278,6 +287,8 @@ async def fantano_imagemaker(message):
 
 	response = requests.get(image_group[number][1])
 	cutout = Image.open(BytesIO(response.content))
+
+	sent.edit(content="Processing ..")
 
 	input_img = await read_image(message)
 	if input_img is None:
@@ -299,6 +310,8 @@ async def fantano_imagemaker(message):
 		(input_img.width, input_img.height + image_group[number][5]),
 		(image_group[number][6], input_img.height),
 	)
+
+	sent.edit(content="Processing ...")
 
 	input_img = input_img.transform((SIZE, SIZE), Image.PERSPECTIVE, coeff, Image.BICUBIC)
 
@@ -328,11 +341,13 @@ async def kim_imagemaker(message):
 	kim_base_url = "https://i.imgur.com/5UIezWU.png"
 	kim_cutout_url = "https://i.imgur.com/1JlEG9R.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
+
+	sent.edit(content="Processing ..")
 
 	response = requests.get(kim_base_url)
 	img = Image.open(BytesIO(response.content))
@@ -357,6 +372,8 @@ async def kim_imagemaker(message):
 
 	input_img = input_img.transform((268, 235), Image.PERSPECTIVE, coeff, Image.BICUBIC).convert("RGBA")
 
+	sent.edit(content="Processing ...")
+
 	blank = Image.new("RGBA", img.size, "rgba(20,20,20,255)")
 	blank.paste(input_img, (753, 202), mask=input_img)
 
@@ -368,7 +385,7 @@ async def kim_imagemaker(message):
 
 
 async def get_emoji(message, client):
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	message2 = message.content.split(' ')
 	if message2[1][-1:] == '>':
 		url = "https://cdn.discordapp.com/emojis/" + str(message2[1][-19:-1]) + ".gif"
@@ -377,6 +394,7 @@ async def get_emoji(message, client):
 			img = Image.open(BytesIO(response.content))
 			if(len(message2) > 2):
 				try:
+					sent.edit(content="Processing ..")
 					size = float(message2[2])
 					if(size > 10):
 						size = 10
@@ -393,6 +411,7 @@ async def get_emoji(message, client):
 			img = Image.open(BytesIO(response.content))
 			if (len(message2) > 2):
 				try:
+					sent.edit(content="Processing ..")
 					size = float(message2[2])
 					if (size > 12):
 						size = 12
@@ -401,6 +420,7 @@ async def get_emoji(message, client):
 					await message.channel.send("Invalid scale!")
 				else:
 					img = img.resize((int(img.width * size), int(img.height * size)), Image.BICUBIC)
+			sent.edit(content="Processing ..")
 			img.save("emoji.png")
 			await message.channel.send(file=discord.File("emoji.png"))
 	else:
@@ -409,6 +429,7 @@ async def get_emoji(message, client):
 					message.content[3].lower().encode("unicode_escape").decode()[-5:] + \
 					".svg"
 			try:
+				sent.edit(content="Processing ..")
 				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=float(message.content[5:]))
 			except IndexError:
 				cairosvg.svg2png(url=emoji, write_to="emoji.png", scale=int(20))
@@ -422,6 +443,7 @@ async def get_emoji(message, client):
 		except OSError:
 			await message.channel.send("There is a problem with that emoji, sorry :frowning:")
 		else:
+			sent.edit(content="Processing ...")
 			await message.channel.send(file=discord.File("emoji.png"))
 			await sent.delete()
 	await sent.delete()
@@ -435,12 +457,14 @@ async def resize_img(message):
 		await message.channel.send("Hey you need to add a number to the end of the command!")
 		return
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
+
+	sent.edit("Processing ..")
 
 	x = input_img.width * input_img.height
 	if x > 1000000:
@@ -458,6 +482,8 @@ async def resize_img(message):
 		resize_factor = 0.5
 		await message.channel.send("Changing the resize factor to **" + str(resize_factor) + "**")
 
+	sent.edit("Processing ...")
+
 	input_img = input_img.convert("RGBA").resize((int(input_img.width * resize_factor), int(input_img.height * resize_factor)),
 												 Image.BICUBIC)
 
@@ -467,12 +493,14 @@ async def resize_img(message):
 
 
 async def sort_pixels(message):
-	sent = await message.channel.send("Processing... (this might take a while)")
+	sent = await message.channel.send("Processing (this might take a while)")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
 	input_img = input_img.convert("RGBA")
+
+	await sent.edit(content="Processing (this might take a while) .")
 
 	MAX_SIZE = 500
 
@@ -495,15 +523,21 @@ async def sort_pixels(message):
 			temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
 			pixels.append(temp)
 
+	await sent.edit(content="Processing (this might take a while) ..")
+
 	pixels.sort(key=lambda tup: tup[4])
 
 	final_img = Image.new("RGBA", (input_img.width, input_img.height), "rgba(0,0,255,0)")
+
+	await sent.edit(content="Processing (this might take a while) ...")
 
 	counter = 0
 	for y in range(input_img.height):
 		for x in range(input_img.width):
 			final_img.putpixel((x, y), pixels[counter][0:4])
 			counter = counter + 1
+
+	await sent.edit(content="Processing (this might take a while) ....")
 
 	final_img.save("sorted_pixels.png")
 	await sent.delete()
@@ -513,13 +547,14 @@ async def sort_pixels(message):
 async def pixel_shuffle(message):
 	message_split = message.clean_content.split(' ')
 
-	sent = await message.channel.send("Processing... (this might take a while)")
+	sent = await message.channel.send("Processing (this might take a while)")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
 
 	max_factor = int(3314233 / (input_img.width * input_img.height + 100000))  # function to limit the user entered value
+	await sent.edit(content="Processing (this might take a while) .")
 
 	try:
 		swap_factor = float(message_split[-1])
@@ -535,6 +570,10 @@ async def pixel_shuffle(message):
 	input_img = input_img.convert("RGBA")
 
 	for i in range(int(swap_factor * input_img.width * input_img.height // 20)):
+		if i == int(int(swap_factor * input_img.width * input_img.height // 20) / 3):
+			await sent.edit(content="Processing (this might take a while) ..")
+		if i == 2* int(int(swap_factor * input_img.width * input_img.height // 20) / 3):
+			await sent.edit(content="Processing (this might take a while) ...")
 		# get two random pixels
 		pos1 = random.randint(0, input_img.width - 1), random.randint(0, input_img.height - 1)
 		pos2 = random.randint(0, input_img.width - 1), random.randint(0, input_img.height - 1)
@@ -544,6 +583,7 @@ async def pixel_shuffle(message):
 		input_img.putpixel(pos1, input_img.getpixel(pos2))
 		input_img.putpixel(pos2, temp)
 
+	await sent.edit(content="Processing (this might take a while) ....")
 	input_img.save("shuffled_pixels.png")
 	await sent.delete()
 	await message.channel.send("Shuffled the image by **" + str(swap_factor) + "** !")
@@ -562,11 +602,12 @@ async def twice_imagemaker(message):
 	naeyon_base_url = "https://i.imgur.com/jl3Lv0U.png"
 	naeyon_cutout_url = "https://i.imgur.com/OsQvrXh.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
+	await sent.edit(content="Processing ..")
 
 	input_img = input_img.convert("RGBA")
 
@@ -582,6 +623,8 @@ async def twice_imagemaker(message):
 	blank = Image.new("RGBA", img.size, "rgba(230,230,230,255)")
 	blank.paste(input_img, (116, 221), mask=input_img)
 
+	await sent.edit(content="Processing ...")
+
 	img_final = ImageChops.composite(img, blank, cutout)
 	img_final.save("twice.png")
 
@@ -593,12 +636,12 @@ async def drawing_imagemaker(message):
 	drawing_base_url = "https://i.imgur.com/9XayuIf.png"
 	drawing_cutout_url = "https://i.imgur.com/NCTZJgG.png"  # "https://i.imgur.com/nRhholX.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
-
+	await sent.edit(content="Processing ..")
 	input_img = input_img.convert("RGBA")
 
 	response = requests.get(drawing_base_url)
@@ -639,6 +682,7 @@ async def drawing_imagemaker(message):
 	input_img = input_img.transform((1400, 1280), Image.PERSPECTIVE, coeff, Image.BICUBIC)
 	# input_img.save("drawing.png")
 	# await message.channel.send(file=discord.File("drawing.png"))
+	await sent.edit(content="Processing ...")
 
 	blank = Image.new("RGBA", bigger_img.size, "rgba(189,177,166,255)")
 	blank.paste(input_img, (243, 33), mask=input_img)
@@ -657,7 +701,7 @@ async def drawing_imagemaker(message):
 
 
 async def undo_img(message):
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	m = await message.channel.history(limit=30).flatten()
 	counter = 0
 	for i in range(30):
@@ -668,7 +712,9 @@ async def undo_img(message):
 				image = Image.open(BytesIO(response.content))
 				if str(m[i].author) == "Shuckbot#6675" or counter == 1:
 					counter = counter + 1
+					await sent.edit(content="Processing ..")
 				if counter == 2:
+					await sent.edit(content="Processing ...")
 					image.save("undo.png")
 					await sent.delete()
 					await message.channel.send(file=discord.File("undo.png"))
@@ -681,7 +727,9 @@ async def undo_img(message):
 					image = Image.open(BytesIO(response.content))
 					if str(m[i].author) == "Shuckbot#6675" or counter == 1:
 						counter = counter + 1
+						await sent.edit(content="Processing ..")
 					if counter == 2:
+						await sent.edit(content="Processing ...")
 						image.save("undo.png")
 						await sent.delete()
 						await message.channel.send(file=discord.File("undo.png"))
@@ -694,13 +742,17 @@ async def undo_img(message):
 					image = Image.open(BytesIO(response.content))
 					if str(m[i].author) == "Shuckbot#6675" or counter == 1:
 						counter = counter + 1
+						await sent.edit(content="Processing ..")
 					if counter == 2:
+						await sent.edit(content="Processing ...")
 						image.save("undo.png")
 						await sent.delete()
 						await message.channel.send(file=discord.File("undo.png"))
 						return
 				except OSError:
 					continue
+
+	await sent.edit(content="Processing ...")
 	await sent.delete()
 	await message.channel.send("There's nothing to undo!")
 	return
@@ -710,12 +762,12 @@ async def heejin_imagemaker(message):
 	heejin_base_url = "https://i.imgur.com/ZK4e545.png"
 	heejin_cutout_url = "https://i.imgur.com/qn7Un9h.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
-
+	await sent.edit(content="Processing ..")
 	input_img = input_img.convert("RGBA")
 
 	response = requests.get(heejin_base_url)
@@ -730,7 +782,7 @@ async def heejin_imagemaker(message):
 
 	blank = Image.new("RGBA", img.size, "rgba(230,230,230,255)")
 	blank.paste(input_img, (119, 406), mask=input_img)
-
+	await sent.edit(content="Processing ...")
 	img_final = ImageChops.composite(img, blank, cutout)
 	img_final.save("heejin.png")
 
@@ -742,11 +794,12 @@ async def school_imagemaker(message):
 	school_base_url = "https://i.imgur.com/Q7RBEfz.png"
 	school_cutout_url = "https://i.imgur.com/NHahWmf.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
+	await sent.edit(content="Processing ..")
 
 	input_img = input_img.convert("RGBA")
 
@@ -775,7 +828,7 @@ async def school_imagemaker(message):
 
 	blank = Image.new("RGBA", img.size, "rgba(230,230,230,255)")
 	blank.paste(input_img, (180, 125), mask=input_img)
-
+	await sent.edit(content="Processing ...")
 	img_final = ImageChops.composite(img, blank, cutout).crop((0,0,550,500))
 	img_final.save("school.png")
 
@@ -875,3 +928,50 @@ async def tesla_imagemaker(message):
 async def get_colour_from_hex(message):
 	pass
 	# TODO: this!
+
+
+async def osu_imagemaker(message):
+	templates = [
+		("https://i.imgur.com/jVvNla4.png", "https://i.imgur.com/mK7vRZP.png", (902, 508), (31, 31)),
+		("https://i.imgur.com/5mJ8JRe.png", "https://i.imgur.com/gjZ6oAd.png", (1091, 614), (24, 11)),
+		("https://i.imgur.com/rMPA3Oj.png", "https://i.imgur.com/cBiW9GS.png", (1080, 605), (11, 13)),
+		("https://i.imgur.com/lxHX0c5.png", "https://i.imgur.com/UmRonoQ.png", (925, 516), (13, 12)),
+		("https://i.imgur.com/FfpTUe5.png", "https://i.imgur.com/ZaFklHg.png", (1083, 605), (16, 43)),
+		("https://i.imgur.com/sayo07Z.png", "https://i.imgur.com/osQve7x.png", (1034, 582), (5, 5)),
+		("https://i.imgur.com/iwP94yb.png", "https://i.imgur.com/3rrf6CA.png", (934, 529), (22, 24))
+	]
+
+	index = random.randint(0, 6)
+
+	osu_base_url = templates[index][0]
+	osu_cutout_url = templates[index][1]
+
+	sent = await message.channel.send("Processing .")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	await sent.edit(content="Processing ..")
+
+	input_img = input_img.convert("RGBA")
+
+	response = requests.get(osu_base_url)
+	img = Image.open(BytesIO(response.content))
+
+	response = requests.get(osu_cutout_url)
+	cutout = Image.open(BytesIO(response.content))
+
+	size = templates[index][2]
+	input_img = rectangle_image_crop(input_img, size)
+
+	top_left_corner = templates[index][3]
+
+	blank = Image.new("RGBA", img.size, "rgba(20,20,20,255)")
+	blank.paste(input_img, top_left_corner, mask=input_img)
+	await sent.edit(content="Processing ...")
+	img_final = ImageChops.composite(img, blank, cutout)
+	img_final.save("osu.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("osu.png"))

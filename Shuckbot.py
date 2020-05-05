@@ -134,6 +134,9 @@ async def on_message(message):
         if content.lower().startswith(("tesla")):
             await imagefun.tesla_imagemaker(message)
 
+        if content.lower().startswith(("osu")):
+            await imagefun.osu_imagemaker(message)
+
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
@@ -142,6 +145,9 @@ async def on_message(message):
 
     if message.clean_content.lower() == "s":
         await imagesearch.stop(message)
+
+    if message.clean_content.lower() == "based":
+        await message.channel.send("based on what?")
 
 
 
