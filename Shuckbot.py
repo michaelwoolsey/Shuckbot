@@ -20,6 +20,7 @@ defaultPrefix = ';'
 client = discord.Client()
 
 
+
 @client.event
 async def on_message(message):
     if message.clean_content.startswith(';') and not message.author.bot and \
@@ -91,7 +92,7 @@ async def on_message(message):
         if content.lower().startswith(("fantano", "fan", "review", "tnd")):
             await imagefun.fantano_imagemaker(message)
 
-        if content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1 ", "1\n")):
+        if content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1", "1\n")):
             await imagefun.one_imagemaker(message)
 
         if content.lower().startswith("kim"):
@@ -102,6 +103,36 @@ async def on_message(message):
 
         if content.lower().startswith(("sort", "pixelsort", "sortpixels")):
             await imagefun.sort_pixels(message)
+
+        if content.lower().startswith(("shuffle", "pixelshuffle")):
+            await imagefun.pixel_shuffle(message)
+
+        if content.lower().startswith(("resize", "scale")):
+            await imagefun.resize_img(message)
+
+        if content.lower().startswith(("size")):
+            await imagefun.get_size(message)
+
+        if content.lower().startswith(("twice", "mina")):
+            await imagefun.twice_imagemaker(message)
+
+        if content.lower().startswith(("draw", "drawing")):
+            await imagefun.drawing_imagemaker(message)
+
+        if content.lower().startswith(("undo")):
+            await imagefun.undo_img(message)
+
+        if content.lower().startswith(("heejin", "loona")):
+            await imagefun.heejin_imagemaker(message)
+
+        if content.lower().startswith(("school")):
+            await imagefun.school_imagemaker(message)
+
+        if content.lower().startswith(("lecture", "lect")):
+            await imagefun.lecture_imagemaker(message)
+
+        if content.lower().startswith(("tesla")):
+            await imagefun.tesla_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)

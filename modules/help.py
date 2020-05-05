@@ -29,12 +29,14 @@ shucks = [
 ]
 
 commands = [
-    # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server"},
+    # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server", 'page': 1},
     {'command': 'i/im/img <query>', 'info': "Google image searches for an image", 'page': 1},
     {'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag>',
      'info': 'Access, add, edit, and remove a tag, or find its owner', 'page': 1},
     {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data', 'page': 1},
     {'command': 'ping', 'info': 'Measures Shuckbot\'s ping', 'page': 1},
+	{'command': 'undo', 'info': 'Undoes the last image command', 'page': 2},
+	{'command': 'resize/scale <image URL / @user> <scale factor>', 'info': 'Scales your image by a specified factor', 'page': 2},
     {'command': 'hold/holding <image URL / @user>', 'info': 'A perplexed man will hold your image', 'page': 2},
     {'command': 'exm/exmilitary <image URL / @user>', 'info': 'Your image will turn into Sacramento based experimental hip hop band Death Grip\'s first mixtape', 'page': 2},
     {'command': 'fan/fantano/review/tnd <image URL / @user>', 'info': 'Funny internet music man will review your image', 'page': 2},
@@ -42,9 +44,18 @@ commands = [
     {'command': '1/1bit/one <image URL / @user>', 'info': 'Your image will be represented in 1-bit colour space', 'page': 3},
     {'command': 'e <emote> <scale (optional)>', 'info': 'Your emote will become an image', 'page': 1},
 	{'command': 'sort/pixelsort <image URL / @user>', 'info': 'Your image\'s pixels will be sorted from darkest to lightest', 'page': 3},
+	{'command': 'shuffle/pixelshuffle <image URL / @user> <shuffle factor (optional)>', 'info': 'Your image\'s pixels will be shuffled', 'page': 3},
+	{'command': 'size <image URL / @user>', 'info': 'Tells the size of the image', 'page': 4},
+	{'command': 'twice/mina <image URL / @user>', 'info': 'Mina from kpop group Twice will hold your image', 'page': 2},
+	{'command': 'heejin/loona <image URL / @user>', 'info': 'Heejin from kpop group LOONA will hold your image','page': 2},
+	{'command': 'draw/drawing <image URL / @user>', 'info': 'A respectable young man will draw your image on a whiteboard', 'page': 2},
+	{'command': 'school <image URL / @user>', 'info': 'An even younger man will draw your image in MSPaint', 'page': 2},
+	{'command': 'lecture/lect <image URL / @user>', 'info': 'Your image will be presented to students in a lecture', 'page': 2},
+	{'command': 'tesla <image URL / @user>', 'info': 'Your image will appear in a tesla', 'page': 2},
 	{'command': 'Page 1: ', 'info': 'General Commands', 'page': 0},
 	{'command': 'Page 2: ', 'info': 'Image editor Commands', 'page': 0},
 	{'command': 'Page 3: ', 'info': 'Image filter Commands', 'page': 0},
+	{'command': 'Page 4: ', 'info': 'Image info Commands', 'page': 0},
 	{'command': 'Access other pages with', 'info': ';help <page #>', 'page': 0}
 ]
 
@@ -55,13 +66,18 @@ async def show_help(message, client, ownerID):
 	if(len(message.content) == 5):
 		page_num = 0
 	else:
-		page_num = int(message.content[6:])
-		if page_num > 3:
-			page_num = 3
+		try:
+			page_num = int(message.content[6:])
+			if page_num > 4:
+				page_num = 4
+			if page_num < 0:
+				page_num = 0
+		except ValueError:
+			page_num = 0
 
 	embed = discord.Embed()
 
-	titles = ["Shuckbot help", "General commands", "Image editor commands", "Image filter commands"]
+	titles = ["Shuckbot help", "General commands", "Image editor commands", "Image filter commands", "Image info commands"]
 
 	embed.title = titles[page_num]
 	embed.type = "rich"
@@ -69,7 +85,7 @@ async def show_help(message, client, ownerID):
 	for item in commands:
 		if item['page'] == page_num:
 			embed.add_field(name=item['command'], value=item['info'], inline=False)
-	embed.set_footer(text="Page "+str(page_num)+"/3     type ;help <page number> to see the other pages!",
+	embed.set_footer(text="Page "+str(page_num)+"/4     type ;help <page number> to see the other pages!",
 					 icon_url=shucks[message.id % 23])
 	msg = await message.channel.send(embed=embed)
 	# reactL = await msg.add_reaction(":shuckL:706690260519747604")
