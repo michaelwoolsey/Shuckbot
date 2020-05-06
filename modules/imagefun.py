@@ -1,10 +1,9 @@
 import discord
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageColor
 import requests
 from io import BytesIO
 import re
 import numpy as np
-from discord.ext.commands import EmojiConverter
 from numpy import linalg
 import cairosvg
 import random
@@ -12,7 +11,6 @@ import random
 
 def is_valid_filetype(str):
 	return re.search(r".*(\.png|\.jpg|\.gif|\.jpeg|\.webp|\.PNG|\.JPG|\.GIF|\.JPEG|\.WEBP).*", str) # or re.search(r".*https://tenor.com/view/.*", str)
-
 
 
 # reads an image in from the sent message
@@ -926,8 +924,35 @@ async def tesla_imagemaker(message):
 
 
 async def get_colour_from_hex(message):
-	pass
-	# TODO: this!
+	message_split = message.clean_content.split(' ')
+	colour_val = ''
+	size = 100
+	await message.channel.send(len(message.content))
+
+	try:
+		colour = (message_split[1:])
+		if not colour:
+			await message.channel.send("Hey you need to add a hex code or rgb values to the end of the command!")
+			return
+	except IndexError:
+		await message.channel.send("Hey you need to add a hex code or rgb values to the end of the command!")
+		return
+	if len(colour) == 1:
+		if isinstance(message_split[1], discord.Role):
+			colour_val = message_split[1].colour.to_rgb
+
+		else:
+			if colour[0][0] != '#':
+				colour_val = "#" + str(colour[0])
+			else:
+				colour_val = str(colour[0])  # str(colour[0][1:])
+		try:
+			img = Image.new("RGB", (size, size), colour_val)
+		except ValueError:
+			await message.channel.send("Hey you need to add a valid hex code to the end of the command!")
+		else:
+			img.save("colour.png")
+			await message.channel.send(file=discord.File("colour.png"))
 
 
 async def osu_imagemaker(message):

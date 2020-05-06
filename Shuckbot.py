@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun, help
+from modules import tags, imagesearch, metar, imagefun, help, save
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -48,8 +48,17 @@ async def on_message(message):
         if content.lower().startswith(("help", "page")):
             await help.show_help(message, client, ownerID)
 
-        if content.lower().startswith(("img", "i", "im")) and ' ' in message.clean_content:
-            await imagesearch.search(message)
+        if content.lower().startswith(("img ", "i ", "im ")):
+            await imagesearch.google_search(message)
+
+        if content.lower().startswith("r34"):
+            await imagesearch.r34_search(message)
+
+        if content.lower() == "save":
+            await save.save(message)
+
+        if content.lower() == "saved":
+            await save.saved(message)
 
         if content.lower().startswith(("tag ", "t ")):
             if ' ' not in message.clean_content:
@@ -137,10 +146,13 @@ async def on_message(message):
         if content.lower().startswith(("osu")):
             await imagefun.osu_imagemaker(message)
 
+        if content.lower().startswith(("color", "colour", "c ")):
+            await imagefun.get_colour_from_hex(message)
+
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
-    if message.clean_content.lower().startswith("p") and len(message.clean_content.lower()) <= 3:
+    if message.clean_content.lower().startswith("p"):
         await imagesearch.jump(message)
 
     if message.clean_content.lower() == "s":
