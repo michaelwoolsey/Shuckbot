@@ -59,7 +59,8 @@ async def create_viewer(message, images_array, length, title, **kwargs):
     embed = discord.Embed()
     embed.title = title
     embed.set_image(url=images_array[0]).set_footer(text="Page 1 of " + str(length)) \
-        .set_author(name=message.author.display_name, icon_url=message.author.avatar_url).description = authors[0]
+        .set_author(name=message.author.display_name, icon_url=message.author.avatar_url)\
+        .description = str(message.guild.get_member(authors[0]))
     sent = await message.channel.send(embed=embed)  # save the message
     # store the message channel, the message to edit, the query results, the page we're on, and the author
     meta = {'chan': message.channel.id, 'msg': sent, 'images': images_array, 'pg': 1, 'length': length,
@@ -129,9 +130,17 @@ async def jump(message):
             break
 
 
+def get_current_image(message):
+    if not searches[0]:
+        return
+    for item in searches:
+        if item['chan'] == message.channel.id:
+            return item
+
+
 async def edit_embed(results, embed, message):
     embed.set_image(url=results['images'][results['pg'] - 1]) \
         .set_footer(text="Page " + str(results['pg']) + " of " + str(results['length']))\
-        .description = results['authors'][0]
+        .description = str(message.guild.get_member(results['authors'][0]))
     await results['msg'].edit(embed=embed)
     await message.delete()

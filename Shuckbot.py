@@ -20,7 +20,6 @@ defaultPrefix = ';'
 client = discord.Client()
 
 
-
 @client.event
 async def on_message(message):
     if message.clean_content.startswith(';') and not message.author.bot and \
@@ -54,13 +53,20 @@ async def on_message(message):
         if content.lower().startswith("r34"):
             await imagesearch.r34_search(message)
 
-        if content.lower() == "save":
-            await save.save(message)
+        if content.lower().startswith(("pb", "picturebook", "photobook")):
+            if ' ' not in content:
+                await save.get_saved(message)
 
-        if content.lower() == "saved":
-            await save.saved(message)
+            else:
+                arg = content.split(' ')[1].lower()  # the first argument
 
-        if content.lower().startswith(("tag ", "t ")):
+                if arg == 'add' or arg == 'save':
+                    await save.save(message)
+
+                elif arg == 'remove' or arg == "delete" or arg == "rm":
+                    await save.remove(message, ownerID)
+
+        if content.lower().startswith(("tag", "t ")):
             if ' ' not in message.clean_content:
                 await tags.syntax_error(message)
             else:
@@ -107,7 +113,7 @@ async def on_message(message):
         if content.lower().startswith("kim"):
             await imagefun.kim_imagemaker(message)
 
-        if content.lower().startswith("e "):
+        if content.lower().startswith(("e ", "emote")):
             await imagefun.get_emoji(message, client)
 
         if content.lower().startswith(("sort", "pixelsort", "sortpixels")):
@@ -160,7 +166,6 @@ async def on_message(message):
 
     if message.clean_content.lower() == "based":
         await message.channel.send("based on what?")
-
 
 
 client.run(clientKey)

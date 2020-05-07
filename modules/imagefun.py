@@ -462,25 +462,31 @@ async def resize_img(message):
 		await sent.delete()
 		return
 
-	sent.edit("Processing ..")
+	sent.edit(content="Processing ..")
 
 	x = input_img.width * input_img.height
 	if x > 1000000:
 		max_factor = 1
-	else:
+	elif x > 1:
 		# max_factor = int(50*(200000/(x+550000)))
 		# max_factor = min(int(1 + (0.0000001 * ((x - 2000000) * (x - 2000000)))), 10)
 		max_factor = int((1000000)/(x+90000))
+	elif x == 1:
+		max_factor = 250
+	else:
+		max_factor == 1
+
+	min_factor = max((1 / input_img.width), (1 / input_img.height))
 
 	if resize_factor > max_factor:
 		resize_factor = max_factor
 		await message.channel.send("Changing the resize factor to **" + str(resize_factor) + "**")
 
-	if resize_factor < 0:
-		resize_factor = 0.5
+	if resize_factor < min_factor:
+		resize_factor = min_factor
 		await message.channel.send("Changing the resize factor to **" + str(resize_factor) + "**")
 
-	sent.edit("Processing ...")
+	sent.edit(content="Processing ...")
 
 	input_img = input_img.convert("RGBA").resize((int(input_img.width * resize_factor), int(input_img.height * resize_factor)),
 												 Image.BICUBIC)
@@ -552,6 +558,7 @@ async def pixel_shuffle(message):
 		return
 
 	max_factor = int(3314233 / (input_img.width * input_img.height + 100000))  # function to limit the user entered value
+
 	await sent.edit(content="Processing (this might take a while) .")
 
 	try:
@@ -561,9 +568,6 @@ async def pixel_shuffle(message):
 
 	if swap_factor > max_factor:
 		swap_factor = max_factor
-
-	if swap_factor < 0:
-		swap_factor = 1
 
 	input_img = input_img.convert("RGBA")
 
@@ -927,7 +931,6 @@ async def get_colour_from_hex(message):
 	message_split = message.clean_content.split(' ')
 	colour_val = ''
 	size = 100
-	await message.channel.send(len(message.content))
 
 	try:
 		colour = (message_split[1:])
