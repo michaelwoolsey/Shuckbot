@@ -6,7 +6,7 @@ from modules import imagesearch
 from tinydb import TinyDB, Query
 import discord
 
-saved = TinyDB("saved.json")
+saved = TinyDB("picturebook.json")
 
 
 def is_valid_filetype(str):
@@ -71,7 +71,12 @@ async def save(message):
     image = await read_image(message)
     if image is None:
         return
-    saved.table(str(message.guild.id)).insert({'server': message.guild.id, 'image': image, 'owner': message.author.id})
+    result = saved.table(str(message.guild.id)).search(Query().image == image)
+    if len(result):
+        await message.channel.send("That image is already in the picturebook!")
+        return
+    saved.table(str(message.guild.id)).insert({'server': message.guild.id, 'image': str(image),
+                                               'owner': message.author.id})
     await message.channel.send("Image saved!")
 
 
@@ -83,9 +88,9 @@ async def get_saved(message):
     images = []
     authors = []
     for item in all_saved:
-        images.append(item["image"])
-        authors.append(item["owner"])
-    await imagesearch.create_viewer(message, images, len(images), "Saved Images", authors=authors)
+        images.insert(0, item["image"])
+        authors.insert(0, item["owner"])
+    await imagesearch.create_viewer(message, images, len(images), "Picturebook", authors=authors)
 
 
 async def remove(message, owner_id):
@@ -97,9 +102,8 @@ async def remove(message, owner_id):
     if not result:  # if result is not found
         await message.channel.send("Something has gone terribly wrong! Sorry!")
     else:
-        print(result)
         if result[0]['owner'] == message.author.id or message.author.id == owner_id:
-            saved.remove(result[0])
+            saved.table(str(message.guild.id)).remove(Query().image == current['images'][current['pg'] - 1])
             await message.channel.send("Removed the current image!")
         else:
             await message.channel.send("You are not the creator of the current image!")

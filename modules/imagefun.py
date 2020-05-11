@@ -830,7 +830,9 @@ async def school_imagemaker(message):
 
 	blank = Image.new("RGBA", img.size, "rgba(230,230,230,255)")
 	blank.paste(input_img, (180, 125), mask=input_img)
+
 	await sent.edit(content="Processing ...")
+
 	img_final = ImageChops.composite(img, blank, cutout).crop((0,0,550,500))
 	img_final.save("school.png")
 
@@ -841,12 +843,12 @@ async def lecture_imagemaker(message):
 	lecture_base_url = "https://i.imgur.com/K0Yy8Ef.png"
 	lecture_cutout_url = "https://i.imgur.com/yn2rbzY.png"
 
-	sent = await message.channel.send("Processing...")
+	sent = await message.channel.send("Processing .")
 	input_img = await read_image(message)
 	if input_img is None:
 		await sent.delete()
 		return
-
+	await sent.edit(content="Processing ..")
 	input_img = input_img.convert("RGBA")
 
 	response = requests.get(lecture_base_url)
@@ -874,6 +876,8 @@ async def lecture_imagemaker(message):
 
 	blank = Image.new("RGBA", img.size, "rgba(230,230,230,255)")
 	blank.paste(input_img, (268, 61), mask=input_img)
+
+	await sent.edit(content="Processing ...")
 
 	img_final = ImageChops.composite(img, blank, cutout)
 	img_final.save("school.png")
@@ -1003,3 +1007,60 @@ async def osu_imagemaker(message):
 
 	await sent.delete()
 	await message.channel.send(file=discord.File("osu.png"))
+
+
+async def noise_imagemaker(message):
+	MAX_WIDTH = 500
+	MAX_HEIGHT = 500
+
+	message_split = message.clean_content.split(' ')
+	try:
+		width = int(message_split[1])
+		height = int(message_split[2])
+	except ValueError:
+		await message.channel.send("Hey! You didnt enter valid numbers for height and width!")
+		return
+	except IndexError:
+		await message.channel.send("Hey! You need to enter two values with your command for height and width!")
+		return
+
+	message_txt = 'Processing'
+
+	sent = await message.channel.send(message_txt)
+
+	invalidDimensions = [False, False]
+
+	if width < 1:
+		width = 1
+		invalidDimensions[0] = True
+	elif width > MAX_WIDTH:
+		width = MAX_WIDTH
+		invalidDimensions[0] = True
+	if height < 1:
+		height = 1
+		invalidDimensions[1] = True
+	elif height > MAX_HEIGHT:
+		height = MAX_HEIGHT
+		invalidDimensions[1] = True
+
+	if invalidDimensions[0] or invalidDimensions[1]:
+		message_txt = "Resizing to (" + str(width) + ", " + str(height) + "), " + message_txt
+
+	message_txt = message_txt + '.'
+	await sent.edit(content=message_txt)
+
+	img = Image.new("RGB", (width, height), (0, 0, 0))
+	for y in range(height):
+		if int(y % (height / 3)) == int(height / 3 - 2):  # at approximately 33%, 66%, and 99% of the way through
+			message_txt = message_txt + '.'				  # the message is edited to contain another '.'
+			await sent.edit(content=message_txt)
+		for x in range(width):
+			img.putpixel((x, y), (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+
+	# rng = np.random.default_rng()
+	# img = rng.integers(0, 2**8, (height, width, 3), dtype=np.uint8)
+
+	img.save("noise.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("noise.png"))
+

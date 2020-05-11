@@ -98,62 +98,65 @@ async def on_message(message):
         if content.lower().startswith("metar"):
             await metar.metar(message, avwxKey)
 
-        if content.lower().startswith(("holding", "hold")):
+        elif content.lower().startswith(("holding", "hold")):
             await imagefun.holding_imagemaker(message)
 
-        if content.lower().startswith(("exm", "exmilitary")):
+        elif content.lower().startswith(("exm", "exmilitary")):
             await imagefun.exmilitary_imagemaker(message)
 
-        if content.lower().startswith(("fantano", "fan", "review", "tnd")):
+        elif content.lower().startswith(("fantano", "fan", "review", "tnd")):
             await imagefun.fantano_imagemaker(message)
 
-        if content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1", "1\n")):
+        elif content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1", "1\n")):
             await imagefun.one_imagemaker(message)
 
-        if content.lower().startswith("kim"):
+        elif content.lower().startswith("kim"):
             await imagefun.kim_imagemaker(message)
 
-        if content.lower().startswith(("e ", "emote")):
+        elif content.lower().startswith(("e ", "emote")):
             await imagefun.get_emoji(message, client)
 
-        if content.lower().startswith(("sort", "pixelsort", "sortpixels")):
+        elif content.lower().startswith(("sort", "pixelsort", "sortpixels")):
             await imagefun.sort_pixels(message)
 
-        if content.lower().startswith(("shuffle", "pixelshuffle")):
+        elif content.lower().startswith(("shuffle", "pixelshuffle")):
             await imagefun.pixel_shuffle(message)
 
-        if content.lower().startswith(("resize", "scale")):
+        elif content.lower().startswith(("resize", "scale")):
             await imagefun.resize_img(message)
 
-        if content.lower().startswith(("size")):
+        elif content.lower().startswith(("size")):
             await imagefun.get_size(message)
 
-        if content.lower().startswith(("twice", "mina")):
+        elif content.lower().startswith(("twice", "mina")):
             await imagefun.twice_imagemaker(message)
 
-        if content.lower().startswith(("draw", "drawing")):
+        elif content.lower().startswith(("draw", "drawing")):
             await imagefun.drawing_imagemaker(message)
 
-        if content.lower().startswith(("undo")):
+        elif content.lower().startswith(("undo")):
             await imagefun.undo_img(message)
 
-        if content.lower().startswith(("heejin", "loona")):
+        elif content.lower().startswith(("heejin", "loona")):
             await imagefun.heejin_imagemaker(message)
 
-        if content.lower().startswith(("school")):
+        elif content.lower().startswith(("school")):
             await imagefun.school_imagemaker(message)
 
-        if content.lower().startswith(("lecture", "lect")):
+        elif content.lower().startswith(("lecture", "lect")):
             await imagefun.lecture_imagemaker(message)
 
-        if content.lower().startswith(("tesla")):
+        elif content.lower().startswith(("tesla")):
             await imagefun.tesla_imagemaker(message)
 
-        if content.lower().startswith(("osu")):
+        elif content.lower().startswith(("osu")):
             await imagefun.osu_imagemaker(message)
 
-        if content.lower().startswith(("color", "colour", "c ")):
+        elif content.lower().startswith(("color", "colour", "c ")):
             await imagefun.get_colour_from_hex(message)
+
+        elif content.lower().startswith(("noise")):
+            await imagefun.noise_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)

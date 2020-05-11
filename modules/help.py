@@ -306,10 +306,25 @@ commands = [
 	},
 
 	{
+		'prefix': ('noise', ''),
+		'command': 'noise <width> <height>',
+		'info': 'An image with random colour pixels will be made',
+		'page': 3,
+		'help': ('Given a width and a height (positive integers), a randomized, noisy image will be made!',
+				 'Aliases:',
+				 'noise',
+				 'Usage:',
+				 ';noise <width> <height>',
+				 'Examples:',
+				 ';noise 30 50\n'
+				 ';noise 500 250')
+	},
+
+	{
 		'prefix': (' osu', 'osu', ''),
 		'command': 'osu <image URL / @user>',
 		'info': 'An osu! streamer will play your image',
-		'page': 2,
+		'page': 3,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will be streamed on twitch by a random osu player!',
 				 'Aliases:',
@@ -327,7 +342,7 @@ commands = [
 		'prefix': ('resize', 'scale'),
 		'command': 'resize/scale <image URL / @user> <scale factor>',
 		'info': 'Scales your image by a specified factor',
-		'page': 2,
+		'page': 3,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will be scaled by a specified amount. It will be limited if the given number is '
 				 'too large or too small',
@@ -346,7 +361,7 @@ commands = [
 		'prefix': ('school', ''),
 		'command': 'school <image URL / @user>',
 		'info': 'A schoolkid will draw your image in MSPaint',
-		'page': 2,
+		'page': 3,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will be drawn on MSPaint by a schoolkid',
 				 'Aliases:',
@@ -364,7 +379,7 @@ commands = [
 		'prefix': ('tesla', ''),
 		'command': 'tesla <image URL / @user>',
 		'info': 'Your image will appear in a tesla',
-		'page': 2,
+		'page': 3,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will appear on a tesla dashboard',
 				 'Aliases:',
@@ -382,7 +397,7 @@ commands = [
 		'prefix': ('twice', 'mina'),
 		'command': 'twice/mina <image URL / @user>',
 		'info': 'Mina from kpop group Twice will hold your image',
-		'page': 2,
+		'page': 3,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will be held by Mina from kpop group Twice',
 				 'Aliases:',
@@ -400,7 +415,7 @@ commands = [
 		'prefix': ('undo', ''),
 		'command': 'undo',
 		'info': 'Undoes the last image command',
-		'page': 2,
+		'page': 3,
 		'help': ('Undoes the last image command performed by Shuckbot. Results may vary',
 				 'Aliases:',
 				 'undo',
@@ -412,7 +427,7 @@ commands = [
 		'prefix': ('1bit', 'one'),
 		'command': '1bit/one <image URL / @user>',
 		'info': 'Your image will be represented in 1-bit colour space',
-		'page': 3,
+		'page': 4,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will get transformed into a 1-bit colour space!',
 				 'Aliases:',
@@ -430,7 +445,7 @@ commands = [
 		'prefix': ('shuffle', 'pixelshuffle'),
 		'command': 'shuffle/pixelshuffle <image URL / @user> <shuffle factor (optional)>',
 		'info': 'Your image\'s pixels will be shuffled',
-		'page': 3,
+		'page': 4,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image will be shuffled around by an inputted factor\n'
 				 'If no value is given, the maximum shuffle for that image size will be applied',
@@ -449,7 +464,7 @@ commands = [
 		'prefix': ('sort', 'pixelsort'),
 		'command': 'sort/pixelsort <image URL / @user>',
 		'info': 'Your image\'s pixels will be sorted from darkest to lightest',
-		'page': 3,
+		'page': 4,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, said image\'s pixels will be sorted from darkest to lightest',
 				 'Aliases:',
@@ -467,7 +482,7 @@ commands = [
 		'prefix': ('size', ''),
 		'command': 'size <image URL / @user>',
 		'info': 'Tells the size of the image',
-		'page': 4,
+		'page': 5,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
 				 'image, the image\'s size gets outputted as (width, height)',
 				 'Aliases:',
@@ -489,18 +504,24 @@ commands = [
 
 	{
 		'command': 'Page 2: ',
-		'info': 'Image editor Commands',
+		'info': 'Image editor Commands [A - M]',
 		'page': 0
 	},
 
 	{
 		'command': 'Page 3: ',
-		'info': 'Image filter Commands',
+		'info': 'Image editor Commands [N - Z]',
 		'page': 0
 	},
 
 	{
 		'command': 'Page 4: ',
+		'info': 'Image filter Commands',
+		'page': 0
+	},
+
+	{
+		'command': 'Page 5: ',
 		'info': 'Image info Commands',
 		'page': 0
 	},
@@ -521,7 +542,8 @@ commands = [
 titles = [
 	"Shuckbot help",
 	"General commands",
-	"Image editor commands",
+	"Image editor commands [A - M]",
+	"Image editor commands [N - Z]",
 	"Image filter commands",
 	"Image info commands"
 ]
@@ -535,8 +557,8 @@ async def show_help(message, client, ownerID):
 	else:
 		try:
 			page_num = int(message.content[6:])
-			if page_num > 4:
-				page_num = 4
+			if page_num > 5:
+				page_num = 5
 			if page_num < 0:
 				page_num = 0
 		except ValueError:  # The user likely entered in a command
@@ -564,7 +586,7 @@ async def show_help(message, client, ownerID):
 		for item in commands:
 			if item['page'] == page_num:
 				embed.add_field(name=item['command'], value=item['info'], inline=False)
-		embed.set_footer(text="Page " + str(page_num) + "/4     type ;help <page number> to see the other pages!",
+		embed.set_footer(text="Page " + str(page_num) + "/5     type ;help <page number> to see the other pages!",
 						 icon_url=shucks[message.id % 23])
 	else:
 		embed.title = gen_pfx.capitalize() + " command help!"

@@ -50,17 +50,14 @@ async def r34_search(message):
 async def create_viewer(message, images_array, length, title, **kwargs):
     authors = []
     if "authors" in kwargs.keys():
-        authors.clear()
         for item in kwargs["authors"]:
             authors.append(item)
-    else:
-        for i in range(0, length):
-            authors.append("")
     embed = discord.Embed()
     embed.title = title
     embed.set_image(url=images_array[0]).set_footer(text="Page 1 of " + str(length)) \
-        .set_author(name=message.author.display_name, icon_url=message.author.avatar_url)\
-        .description = str(message.guild.get_member(authors[0]))
+        .set_author(name=message.author.display_name, icon_url=message.author.avatar_url)
+    if len(authors):
+        embed.description = "By `" + str(message.guild.get_member(authors[0])) + "`"
     sent = await message.channel.send(embed=embed)  # save the message
     # store the message channel, the message to edit, the query results, the page we're on, and the author
     meta = {'chan': message.channel.id, 'msg': sent, 'images': images_array, 'pg': 1, 'length': length,
@@ -140,7 +137,8 @@ def get_current_image(message):
 
 async def edit_embed(results, embed, message):
     embed.set_image(url=results['images'][results['pg'] - 1]) \
-        .set_footer(text="Page " + str(results['pg']) + " of " + str(results['length']))\
-        .description = str(message.guild.get_member(results['authors'][0]))
+        .set_footer(text="Page " + str(results['pg']) + " of " + str(results['length']))
+    if len(results['authors']):
+        embed.description = "By `" + str(message.guild.get_member(results['authors'][results['pg'] - 1])) + "`"
     await results['msg'].edit(embed=embed)
     await message.delete()
