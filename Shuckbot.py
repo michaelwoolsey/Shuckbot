@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun, help, save
+from modules import tags, imagesearch, imagefun, metar, help, save, shucklist
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -157,6 +157,9 @@ async def on_message(message):
 
         elif content.lower().startswith(("noise")):
             await imagefun.noise_imagemaker(message)
+
+        elif content.lower().startswith(("shucklist")):
+            await shucklist.shucklist(message, client)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
