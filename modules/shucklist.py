@@ -1,7 +1,6 @@
 import discord
 
 async def shucklist(message, client):
-    global messages
     shucks = []
     for x in client.emojis:
         if 'shuck' in x.name:
