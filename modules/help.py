@@ -497,6 +497,14 @@ commands = [
 	},
 
 	{
+		'prefix': ('shucklist', ''),
+		'command': 'shucklist',
+		'info': 'Shows all shuck emojis on the server',
+		'page': 5,
+		'help': 'Shows all shuck emojis on the server'
+	},
+
+	{
 		'command': 'Page 1: ',
 		'info': 'General Commands',
 		'page': 0
