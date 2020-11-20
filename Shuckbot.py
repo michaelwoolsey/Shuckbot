@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, imagefun, metar, help, save, shucklist
+from modules import tags, imagesearch, imagefun, metar, help, save, shucklist, upsidedown
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -37,6 +37,9 @@ async def on_message(message):
         #     else:
         #         prefixes.update({'prefix': content[7]}, q.guild == message.guild.id)
         #         await message.channel.send("Prefix changed to " + content[7] + '.')
+
+        if content.lower().startwith("usdtext"):
+            await upsidedown.transform(message)
 
         if content.lower().startswith("ping"):
             now = datetime.now()
