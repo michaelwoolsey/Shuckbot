@@ -38,22 +38,22 @@ async def on_message(message):
         #         prefixes.update({'prefix': content[7]}, q.guild == message.guild.id)
         #         await message.channel.send("Prefix changed to " + content[7] + '.')
 
-        if content.lower().startswith("ping"):
+        elif content.lower().startswith("ping"):
             now = datetime.now()
             sent = await message.channel.send("Measuring ping...")
             diff = sent.created_at - now
             await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
-        if content.lower().startswith(("help", "page")):
+        elif content.lower().startswith(("help", "page")):
             await help.show_help(message, client, ownerID)
 
-        if content.lower().startswith(("img ", "i ", "im ")):
+        elif content.lower().startswith(("img ", "i ", "im ")):
             await imagesearch.google_search(message)
 
-        if content.lower().startswith("r34"):
+        elif content.lower().startswith("r34"):
             await imagesearch.r34_search(message)
 
-        if content.lower().startswith(("pb", "picturebook", "photobook")):
+        elif content.lower().startswith(("pb", "picturebook", "photobook")):
             if ' ' not in content:
                 await save.get_saved(message)
 
@@ -66,7 +66,7 @@ async def on_message(message):
                 elif arg == 'remove' or arg == "delete" or arg == "rm":
                     await save.remove(message, ownerID)
 
-        if content.lower().startswith(("tag", "t ")):
+        elif content.lower().startswith(("tag", "t ")):
             if ' ' not in message.clean_content:
                 await tags.syntax_error(message)
             else:
@@ -95,7 +95,7 @@ async def on_message(message):
                 else:
                     await tags.get(message)
 
-        if content.lower().startswith("metar"):
+        elif content.lower().startswith("metar"):
             await metar.metar(message, avwxKey)
 
         elif content.lower().startswith(("holding", "hold")):
@@ -161,16 +161,16 @@ async def on_message(message):
         elif content.lower().startswith(("shucklist")):
             await shucklist.shucklist(message, client)
 
-    if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
+    elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
-    if message.clean_content.lower().startswith("p"):
+    elif message.clean_content.lower().startswith("p"):
         await imagesearch.jump(message)
 
-    if message.clean_content.lower() == "s":
+    elif message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    if message.clean_content.lower() == "based":
+    elif message.clean_content.lower() == "based":
         await message.channel.send("based on what?")
 
 
