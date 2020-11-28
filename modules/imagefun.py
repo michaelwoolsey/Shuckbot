@@ -10,7 +10,8 @@ import random
 
 
 def is_valid_filetype(str):
-	return re.search(r".*(\.png|\.jpg|\.gif|\.jpeg|\.webp|\.PNG|\.JPG|\.GIF|\.JPEG|\.WEBP).*", str) # or re.search(r".*https://tenor.com/view/.*", str)
+	return re.search(r".*(\.png|\.jpg|\.gif|\.jpeg|\.webp|\.PNG|\.JPG|\.GIF|\.JPEG|\.WEBP).*", str)
+	# or re.search(r".*https://tenor.com/view/.*", str) ?
 
 
 # reads an image in from the sent message
@@ -170,7 +171,7 @@ async def holding_imagemaker(message):
 		await sent.delete()
 		return
 
-	sent.edit(content="Processing ..")
+	await sent.edit(content="Processing ..")
 
 	inner = inner.convert("RGBA")
 	response = requests.get(holding_base_image)
@@ -198,7 +199,7 @@ async def holding_imagemaker(message):
 	inside_img = inside_img.rotate(17, Image.BILINEAR, expand=True)
 	inside_img.putalpha(Image.new("L", inside_img_prerotate.size, "white").rotate(17, expand=True))
 
-	sent.edit(content="Processing ...")
+	await sent.edit(content="Processing ...")
 
 	# the pixel position of the placed image on the background image
 	P1, P2 = 123, 232
@@ -232,7 +233,7 @@ async def exmilitary_imagemaker(message):
 		await sent.delete()
 		return
 
-	sent.edit(content="Processing ..")
+	await sent.edit(content="Processing ..")
 
 	response = requests.get(exmilitary_base_image)
 	im = Image.open(BytesIO(response.content))
@@ -256,7 +257,7 @@ async def exmilitary_imagemaker(message):
 	masko = Image.new("L", (IM_SIZE, IM_SIZE), 110)
 	inside_img.paste(texture, mask=masko)
 
-	sent.edit(content="Processing ...")
+	await sent.edit(content="Processing ...")
 
 	im_final = im_mask.copy()
 	im_final.paste(inside_img, mask=im)
@@ -264,6 +265,8 @@ async def exmilitary_imagemaker(message):
 
 	bg = Image.new("RGBA", im.size, "rgba(1,1,1,255)")
 	bg.paste(im_final)
+
+	im_final = im_final.convert("RGB")
 
 	im_final.save("exmilitary.png")
 
@@ -286,7 +289,7 @@ async def fantano_imagemaker(message):
 	response = requests.get(image_group[number][1])
 	cutout = Image.open(BytesIO(response.content))
 
-	sent.edit(content="Processing ..")
+	await sent.edit(content="Processing ..")
 
 	input_img = await read_image(message)
 	if input_img is None:
@@ -309,7 +312,7 @@ async def fantano_imagemaker(message):
 		(image_group[number][6], input_img.height),
 	)
 
-	sent.edit(content="Processing ...")
+	await sent.edit(content="Processing ...")
 
 	input_img = input_img.transform((SIZE, SIZE), Image.PERSPECTIVE, coeff, Image.BICUBIC)
 
@@ -345,7 +348,7 @@ async def kim_imagemaker(message):
 		await sent.delete()
 		return
 
-	sent.edit(content="Processing ..")
+	await sent.edit(content="Processing ..")
 
 	response = requests.get(kim_base_url)
 	img = Image.open(BytesIO(response.content))
@@ -370,7 +373,7 @@ async def kim_imagemaker(message):
 
 	input_img = input_img.transform((268, 235), Image.PERSPECTIVE, coeff, Image.BICUBIC).convert("RGBA")
 
-	sent.edit(content="Processing ...")
+	await sent.edit(content="Processing ...")
 
 	blank = Image.new("RGBA", img.size, "rgba(20,20,20,255)")
 	blank.paste(input_img, (753, 202), mask=input_img)
@@ -392,7 +395,7 @@ async def get_emoji(message, client):
 			img = Image.open(BytesIO(response.content))
 			if(len(message2) > 2):
 				try:
-					sent.edit(content="Processing ..")
+					await sent.edit(content="Processing ..")
 					size = float(message2[2])
 					if(size > 10):
 						size = 10
@@ -409,7 +412,7 @@ async def get_emoji(message, client):
 			img = Image.open(BytesIO(response.content))
 			if (len(message2) > 2):
 				try:
-					sent.edit(content="Processing ..")
+					await sent.edit(content="Processing ..")
 					size = float(message2[2])
 					if (size > 12):
 						size = 12
@@ -418,7 +421,7 @@ async def get_emoji(message, client):
 					await message.channel.send("Invalid scale!")
 				else:
 					img = img.resize((int(img.width * size), int(img.height * size)), Image.BICUBIC)
-			sent.edit(content="Processing ..")
+			await sent.edit(content="Processing ..")
 			img.save("emoji.png")
 			await message.channel.send(file=discord.File("emoji.png"))
 	else:
@@ -441,7 +444,7 @@ async def get_emoji(message, client):
 		except OSError:
 			await message.channel.send("There is a problem with that emoji, sorry :frowning:")
 		else:
-			sent.edit(content="Processing ...")
+			await sent.edit(content="Processing ...")
 			await message.channel.send(file=discord.File("emoji.png"))
 			await sent.delete()
 	await sent.delete()
@@ -462,7 +465,7 @@ async def resize_img(message):
 		await sent.delete()
 		return
 
-	sent.edit(content="Processing ..")
+	await sent.edit(content="Processing ..")
 
 	x = input_img.width * input_img.height
 	if x > 1000000:
@@ -486,7 +489,7 @@ async def resize_img(message):
 		resize_factor = min_factor
 		await message.channel.send("Changing the resize factor to **" + str(resize_factor) + "**")
 
-	sent.edit(content="Processing ...")
+	await sent.edit(content="Processing ...")
 
 	input_img = input_img.convert("RGBA").resize((int(input_img.width * resize_factor), int(input_img.height * resize_factor)),
 												 Image.BICUBIC)
@@ -512,8 +515,6 @@ async def sort_pixels(message):
 		r, g, b, a = px
 		return r + g + b
 
-	pixels = []
-
 	if input_img.height >= input_img.width:
 		if input_img.height > MAX_SIZE:
 			input_img = input_img.resize((int(input_img.width * MAX_SIZE / input_img.height), MAX_SIZE), Image.BICUBIC)
@@ -521,29 +522,64 @@ async def sort_pixels(message):
 		if input_img.width > MAX_SIZE:
 			input_img = input_img.resize((MAX_SIZE, int(input_img.height * MAX_SIZE / input_img.width)), Image.BICUBIC)
 
-	for y in range(input_img.height):
+	pixels = []
+	message_split = message.clean_content.split(' ')
+
+	if message_split[-1] in {"vert", "vertical", "y", "columns", "cols", "col"}: #sort the vertical columns
 		for x in range(input_img.width):
-			temp_px = input_img.getpixel((x, y))
-			temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
-			pixels.append(temp)
+			for y in range(input_img.height):
+				temp_px = input_img.getpixel((x, y))
+				temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
+				pixels.append(temp)
+			pixels.sort(key=lambda tup: tup[4])  # sort pixels[]
+			for y in range(input_img.height):
+				input_img.putpixel((x, y), pixels[y][0:4])
+			pixels.clear()
 
-	await sent.edit(content="Processing (this might take a while) ..")
+			if x == input_img.width // 3:
+				await sent.edit(content="Processing (this might take a while) ..")
+			elif x == 2 * input_img.width // 3:
+				await sent.edit(content="Processing (this might take a while) ...")
 
-	pixels.sort(key=lambda tup: tup[4])
+	elif message_split[-1] in {"hor", "horizontal", "x", "row", "rows"}: #sort the vertical columns
+		for y in range(0, input_img.height, 1):
+			for x in range(input_img.width):
+				temp_px = input_img.getpixel((x, y))
+				temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
+				pixels.append(temp)
+			pixels.sort(key=lambda tup: tup[4])  # sort pixels[]
+			for x in range(input_img.width):
+				input_img.putpixel((x, y), pixels[x][0:4])
+			pixels.clear()
 
-	final_img = Image.new("RGBA", (input_img.width, input_img.height), "rgba(0,0,255,0)")
+			if y == input_img.width // 3:
+				await sent.edit(content="Processing (this might take a while) ..")
+			elif y == 2 * input_img.width // 3:
+				await sent.edit(content="Processing (this might take a while) ...")
 
-	await sent.edit(content="Processing (this might take a while) ...")
+	else:
+		for y in range(input_img.height):  # put all pixels in pixels[]
+			for x in range(input_img.width):
+				temp_px = input_img.getpixel((x, y))
+				temp = temp_px[0], temp_px[1], temp_px[2], temp_px[3], pixel_brightness(temp_px)
+				pixels.append(temp)
 
-	counter = 0
-	for y in range(input_img.height):
-		for x in range(input_img.width):
-			final_img.putpixel((x, y), pixels[counter][0:4])
-			counter = counter + 1
+		await sent.edit(content="Processing (this might take a while) ..")
+
+		pixels.sort(key=lambda tup: tup[4])  # sort pixels[]
+		final_img = Image.new("RGBA", (input_img.width, input_img.height), "rgba(0,0,255,0)")
+
+		await sent.edit(content="Processing (this might take a while) ...")
+
+		counter = 0
+		for y in range(input_img.height):  # put all pixels[] on the image
+			for x in range(input_img.width):
+				input_img.putpixel((x, y), pixels[counter][0:4])
+				counter = counter + 1
+
 
 	await sent.edit(content="Processing (this might take a while) ....")
-
-	final_img.save("sorted_pixels.png")
+	input_img.save("sorted_pixels.png")
 	await sent.delete()
 	await message.channel.send(file=discord.File("sorted_pixels.png"))
 
@@ -970,10 +1006,11 @@ async def osu_imagemaker(message):
 		("https://i.imgur.com/lxHX0c5.png", "https://i.imgur.com/UmRonoQ.png", (925, 516), (13, 12)),
 		("https://i.imgur.com/FfpTUe5.png", "https://i.imgur.com/ZaFklHg.png", (1083, 605), (16, 43)),
 		("https://i.imgur.com/sayo07Z.png", "https://i.imgur.com/osQve7x.png", (1034, 582), (5, 5)),
-		("https://i.imgur.com/iwP94yb.png", "https://i.imgur.com/3rrf6CA.png", (934, 529), (22, 24))
+		("https://i.imgur.com/iwP94yb.png", "https://i.imgur.com/3rrf6CA.png", (934, 529), (22, 24)),
+		("https://i.imgur.com/pMdFgoQ.png", "https://i.imgur.com/Y0zs7XW.png", (818, 470), (0, 0))
 	]
 
-	index = random.randint(0, 6)
+	index = random.randint(0, 7)
 
 	osu_base_url = templates[index][0]
 	osu_cutout_url = templates[index][1]
@@ -1025,7 +1062,6 @@ async def noise_imagemaker(message):
 		return
 
 	message_txt = 'Processing'
-
 	sent = await message.channel.send(message_txt)
 
 	invalidDimensions = [False, False]
@@ -1056,7 +1092,6 @@ async def noise_imagemaker(message):
 			await sent.edit(content=message_txt)
 		for x in range(width):
 			img.putpixel((x, y), (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
-
 	# rng = np.random.default_rng()
 	# img = rng.integers(0, 2**8, (height, width, 3), dtype=np.uint8)
 
@@ -1064,3 +1099,258 @@ async def noise_imagemaker(message):
 	await sent.delete()
 	await message.channel.send(file=discord.File("noise.png"))
 
+
+async def mokou_imagemaker(message):
+	base_url = "https://i.imgur.com/HczH3lx.png"
+	cutout_url = "https://i.imgur.com/VGI3zY5.png"
+
+	message_txt = 'Processing.'
+	sent = await message.channel.send(message_txt)
+
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	message_txt = message_txt + '.'
+	await sent.edit(content=message_txt)
+
+	input_img = input_img.convert("RGBA")
+
+	response = requests.get(base_url)
+	img = Image.open(BytesIO(response.content))
+
+	response = requests.get(cutout_url)
+	cutout = Image.open(BytesIO(response.content))
+
+	size = 256, 177
+	input_img = rectangle_image_crop(input_img, size)
+
+	blank = Image.new("RGBA", img.size, "rgba(210,210,210,255)")
+	blank.paste(input_img, (143, 110), mask=input_img)
+
+	img_final = ImageChops.composite(img, blank, cutout)
+
+	message_txt = message_txt + '.'
+	await sent.edit(content=message_txt)
+
+	img_final.save("mokou.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("mokou.png"))
+
+
+async def image_shift(message):
+	message_split = message.clean_content.split(' ')
+	axis = 'i j'
+	try:
+		amount = int(message_split[-1])
+	except ValueError:
+		axis = str(message_split[-1])
+		if axis in ('x', 'horizontal', 'h'):
+			axis = 1
+		elif axis in ('y', 'vertical', 'v'):
+			axis = 0
+		try:
+			amount = int(message_split[-2])
+		except (ValueError, IndexError):
+			await message.channel.send("Hey! Those are not valid arguments! It should either look like "
+									   ";shift <number> <argument>  or  ;shift <number> !")
+			return
+
+	message_txt = 'Processing.'
+	sent = await message.channel.send(message_txt)
+
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	message_txt = message_txt + '.'
+	await sent.edit(content=message_txt)
+
+	input_img = input_img.convert("RGBA")
+
+	img = np.array(input_img)
+
+	if axis != 'i j':
+		img = np.roll(img, amount, axis=axis)
+	else:
+		img = np.roll(img, amount)
+
+	message_txt = message_txt + '.'
+	await sent.edit(content=message_txt)
+
+	final_img = Image.fromarray(img)
+
+	final_img.save("warp.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("warp.png"))
+
+
+async def megumin_imagemaker(message):
+	base_url = "https://i.imgur.com/muK6Bm6.png"
+	cutout_url = "https://i.imgur.com/FnOWeGT.png"
+
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	input_img = input_img.convert("RGBA")
+
+	response = requests.get(base_url)
+	img = Image.open(BytesIO(response.content))
+
+	response = requests.get(cutout_url)
+	cutout = Image.open(BytesIO(response.content))
+
+	size = 362, 200
+	input_img = rectangle_image_crop(input_img, size)
+	# input_img = input_img.rotate(37.7, expand=True)
+
+	coeff = _create_coeff(
+		(0, 0),
+		(input_img.width, 0),
+		(input_img.width, input_img.height),
+		(0, input_img.height),
+		# =>
+		(-30, -185),
+		(input_img.width + 265, 15),
+		(input_img.width + 10, input_img.height - 20),
+		(-57, input_img.height - 187),
+	)
+
+	input_img = input_img.transform((400, 520), Image.PERSPECTIVE, coeff, Image.BICUBIC)
+
+	blank = Image.new("RGBA", img.size, "rgba(210,210,210,255)")
+	blank.paste(input_img, (260, 115), mask=input_img)
+
+	img_final = ImageChops.composite(img, blank, cutout)
+	img_final = img_final.crop((397, 0, 1220, 1000))
+	img_final.save("megumin.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("megumin.png"))
+
+
+async def weezer_imagemaker(message):
+	mask_url = 'http://imgur.com/UUPCf9x.png'
+
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	size = 800, 800
+
+	input_img = rectangle_image_crop(input_img.convert("RGBA"), size)
+
+	response = requests.get(mask_url)
+	mask = Image.open(BytesIO(response.content))
+
+	blank = Image.new("RGBA", size, "rgba(210,210,210,255)")
+	blank.paste(input_img, mask=input_img)
+
+	img_final = ImageChops.composite(mask.convert("RGB").convert("RGBA"), blank, mask)
+
+	img_final.save("weezer.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("weezer.png"))
+
+
+async def to_rgb(message):
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+	input_img = input_img.convert("RGB")
+	input_img.save("rgb.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("rgb.png"))
+
+
+async def get_avatar(message):
+	message_split = message.clean_content.split(' ')
+	if len(message_split) == 1:
+		await message.channel.send(message.author.avatar_url)
+	else:
+		msg = ''
+		for member in message.mentions:
+			msg = msg + str(member.avatar_url) + '\n'
+		if msg == '':
+			await message.channel.send(message.author.avatar_url)
+		else:
+			await message.channel.send(msg)
+
+
+async def purple(message):
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	input_img = input_img.convert("RGBA")
+
+	MAX_DIM = 600
+	if input_img.height > MAX_DIM:
+		input_img = input_img.resize((int(input_img.width*MAX_DIM/input_img.height), MAX_DIM), resample=Image.BICUBIC)
+	if input_img.width > MAX_DIM:
+		input_img = input_img.resize((MAX_DIM, (int(input_img.height*MAX_DIM/input_img.width))), resample=Image.BICUBIC)
+
+	for y in range(input_img.height):  # put all pixels in pixels[]
+		for x in range(input_img.width):
+			temp_px = input_img.getpixel((x, y))
+			input_img.putpixel((x, y), (temp_px[0], temp_px[1]//3, min(int(1.25*temp_px[2]), 255), temp_px[3]))
+
+	input_img.save("purple.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("purple.png"))
+	return "sent"
+
+
+async def whatifitwaspurple(message):
+	if await purple(message) == "sent":
+		await message.channel.send("https://i.imgur.com/Id48ya7.png")
+
+
+async def mixer(message):
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	message_split = message.clean_content.split(' ')
+	try:
+		amount = int(message_split[-1]) * 5
+	except ValueError:
+		amount = 10
+
+	if amount > 100:
+		amount = 100
+
+	input_img = input_img.convert("RGBA")
+
+	MAX_DIM = 600
+	if input_img.height > MAX_DIM:
+		input_img = input_img.resize((int(input_img.width*MAX_DIM/input_img.height), MAX_DIM), resample=Image.BICUBIC)
+	if input_img.width > MAX_DIM:
+		input_img = input_img.resize(MAX_DIM, (int(input_img.height*MAX_DIM/input_img.width)), resample=Image.BICUBIC)
+
+	for y in range(input_img.height):
+		for x in range(input_img.width):
+			temp_px = input_img.getpixel((x, y))
+			input_img.putpixel((x, y), (max(min(int(np.random.normal(0, amount)+temp_px[0]), 255), 0),
+										max(min(int(np.random.normal(0, amount)+temp_px[1]), 255), 0),
+										max(min(int(np.random.normal(0, amount)+temp_px[2]), 255), 0),
+										temp_px[3]))
+
+	input_img.save("mix.png")
+	await sent.delete()
+	await message.channel.send(file=discord.File("mix.png"))

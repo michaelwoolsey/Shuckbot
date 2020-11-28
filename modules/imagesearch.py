@@ -34,6 +34,9 @@ async def google_search(message):
 
 
 async def r34_search(message):
+    if not message.channel.is_nsfw():
+        await message.channel.send("Hey! This isn't an nsfw channel! You can't use that here!")
+        return
     tags = message.clean_content.split(' ', 1)[1]
     resp = untangle.parse("https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=" + tags)
     length = len(resp.posts.children)

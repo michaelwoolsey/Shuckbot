@@ -25,7 +25,10 @@ shucks = [
 	'https://i.imgur.com/CaIMs7Y.png',
 	'https://i.imgur.com/TQrwHx6.png',
 	'https://i.imgur.com/AX4Fsqr.png',
-	'https://i.imgur.com/inKNjPt.png'
+	'https://i.imgur.com/inKNjPt.png',
+	'https://i.imgur.com/Yqpugd4.png',
+	'https://i.imgur.com/jJPTljI.png',
+	'https://i.imgur.com/N5Cu6Wx.png'
 ]
 
 commands = [
@@ -155,8 +158,9 @@ commands = [
 
 	{
 		'prefix': ('tag', 't'),
-		'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag> | t/tag list',
-		'info': 'Access, add, edit, and remove a tag, or find its owner',
+		'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag> | t/tag list | t/tag random',
+		'info': 'Access, add, edit, and remove a tag, find its owner, or pull up a random tag! Disclaimer: There is a chance'
+				'that a given tag is NSFW! Be careful when using this command out in the wild.',
 		'page': 1,
 		'help': ('A tag system where you can save longer bits of text in convenient tags\n'
 				 'Access a tag by typing \";t <tag>\" or \";tag <tag>\" \n'
@@ -167,7 +171,7 @@ commands = [
 				 ';t <tag>\n'
 				 ';tag add <tag> <content>\n'
 				 ';t edit <tag> <content>\n'
-				 ';tag remove <tag>'
+				 ';tag remove <tag>\n'
 				 ';t owner <tag>\n'
 				 ';tag list',
 				 'Examples:',
@@ -305,6 +309,44 @@ commands = [
 				 ';heejin @Shuckbot#6675\n')
 	},
 
+{
+		'prefix': ('megumin', 'megu'),
+		'command': 'megu/megumin <image URL / @user>',
+		'info': 'Megumin from Konosuba will be used as a mousepad while Kazuma from Konosuba looks at your image '
+				'(Art by @luizhtx)',
+		'page': 2,
+		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
+				 'image, said image will be seen by Kazuma from Konosuba while Megumin from Konosuba is being used'
+				 'as a mousepad (Art by @luizhtx on twitter)',
+				 'Aliases:',
+				 'megu, megumin',
+				 'Usage:',
+				 ';megu <image URL>\n'
+				 ';megumin <user mention>\n'
+				 ';megu\n',
+				 'Examples:',
+				 ';megu https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';megumin @Shuckbot#6675\n')
+},
+
+{
+		'prefix': ('mokou', 'gf'),
+		'command': 'mokou/gf <image URL / @user>',
+		'info': 'Mokou from Touhou will contemplate her existence because of your image (Art by @jokanhiyou)',
+		'page': 2,
+		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
+				 'image, said image will be seen by Mokou from Touhou on her computer (art by @jokanhiyou on twitter)',
+				 'Aliases:',
+				 'mokou, gf',
+				 'Usage:',
+				 ';mokou <image URL>\n'
+				 ';gf <user mention>\n'
+				 ';mokou\n',
+				 'Examples:',
+				 ';gf https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';mokou @Shuckbot#6675\n')
+	},
+
 	{
 		'prefix': ('noise', ''),
 		'command': 'noise <width> <height>',
@@ -424,6 +466,24 @@ commands = [
 	},
 
 	{
+		'prefix': ('weezer', ''),
+		'command': 'weezer <image URL / @user>',
+		'info': 'Weezer from Weezer (Blue Album) will pose in front of your image',
+		'page': 3,
+		'help': ('Given an image URL, image attachment, user mention, or the last posted image, '
+				 'Weezer from Weezer (Blue Album) will stand in front of your inputted photo',
+				 'Aliases:',
+				 'weezer',
+				 'Usage:',
+				 ';weezer <image URL>\n'
+				 ';weezer <user mention>\n'
+				 ';weezer\n',
+				 'Examples:',
+				 ';weezer https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';weezer @Shuckbot#6675\n')
+	},
+
+	{
 		'prefix': ('1bit', 'one'),
 		'command': '1bit/one <image URL / @user>',
 		'info': 'Your image will be represented in 1-bit colour space',
@@ -439,6 +499,46 @@ commands = [
 				 'Examples:',
 				 ';1bit https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
 				 ';one @Shuckbot#6675\n')
+	},
+
+{
+		'prefix': ('rgb', 'torgb'),
+		'command': 'rgb/torgb <image URL / @user>',
+		'info': 'Remove the image\'s alpha channel!',
+		'page': 4,
+		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
+				 'image, the image\'s alpha channel will vanish!',
+				 'Aliases:',
+				 'rgb, torgb',
+				 'Usage:',
+				 ';rgb <image URL>\n'
+				 ';torgb <user mention>\n'
+				 ';rgb\n',
+				 'Examples:',
+				 ';rgb https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';rgb @Shuckbot#6675\n')
+	},
+
+	{
+		'prefix': ('shift', ''),
+		'command': 'shift <image URL / @user> <shift amount> <axis (optional)>',
+		'info': 'Your image\'s pixels will be shifted by a certain amount',
+		'page': 4,
+		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
+				 'image, said image will be shifted around by an inputted amount\n'
+				 'If no axis value is given, it will be shifted somewhat similar to the horizontal shift, but '
+				 'a lot funkier',
+				 'Aliases:',
+				 'shift',
+				 'Axis Aliases:',
+				 'horizontal, h, x  |  vertical, v, y',
+				 'Usage:',
+				 ';shift <image URL> <number> <axis>\n'
+				 ';shift <user mention> <number>\n'
+				 ';shift <number> <number>\n',
+				 'Examples:',
+				 ';pixelshuffle https://img.pokemondb.net/artwork/large/shuckle.jpg 30 x\n'
+				 ';shuffle @Shuckbot#6675 70\n')
 	},
 
 	{
@@ -462,20 +562,29 @@ commands = [
 
 	{
 		'prefix': ('sort', 'pixelsort'),
-		'command': 'sort/pixelsort <image URL / @user>',
-		'info': 'Your image\'s pixels will be sorted from darkest to lightest',
+		'command': 'sort/pixelsort <image URL / @user> <column || row (optional)>',
+		'info': 'Your image\'s pixels will be sorted from darkest to lightest, or if arguments are specified, '
+				'the image\'s rows or columms will be sorted from darkest to lightest',
 		'page': 4,
 		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
-				 'image, said image\'s pixels will be sorted from darkest to lightest',
+				 'image, said image\'s pixels will be sorted from darkest to lightest, or if arguments are specified, '
+				'the image\'s rows or columms will be sorted from darkest to lightest\n'
+				 'NOTE: this resizes images to 500x500 max for speed',
 				 'Aliases:',
 				 'sort, pixelsort',
+				 'Row sort aliases:',
+				 'row, rows, x, hor, horizontal',
+				 'Column sort aliases:',
+				 'col, column, y, vert, vertical',
 				 'Usage:',
 				 ';sort <image URL>\n'
-				 ';pixelsort <user mention>\n'
+				 ';pixelsort <image URL> <row/column argument>\n'
+				 ';sort <user mention>\n' 
+				 ';pixelsort <user mention> <row/column argument> \n'
 				 ';sort\n',
 				 'Examples:',
 				 ';sort https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
-				 ';pixelsort @Shuckbot#6675\n')
+				 ';pixelsort @Shuckbot#6675 horizontal\n')
 	},
 
 	{
@@ -497,11 +606,20 @@ commands = [
 	},
 
 	{
-		'prefix': ('shucklist', ''),
-		'command': 'shucklist',
-		'info': 'Shows all shuck emojis on the server',
-		'page': 5,
-		'help': 'Shows all shuck emojis on the server'
+		'prefix': ('game color', 'game colour', 'game col', 'game c'),
+		'command': 'game color/colour/col/c',
+		'info': 'Guess the color\'s hex code!',
+		'page': 6,
+		'help': ('Try and gues the color\'s hex code! Your answer should be just 6 letters! ',
+				 'Aliases:',
+				 'size',
+				 'Usage:',
+				 ';size <image URL>\n'
+				 ';size <user mention>\n'
+				 ';size\n',
+				 'Examples:',
+				 ';size https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';size @Shuckbot#6675\n')
 	},
 
 	{
@@ -534,6 +652,12 @@ commands = [
 		'page': 0
 	},
 
+{
+		'command': 'Page 6: ',
+		'info': 'Game Commands',
+		'page': 0
+	},
+
 	{
 		'command': 'Access other pages with',
 		'info': ';help <page #>',
@@ -553,20 +677,23 @@ titles = [
 	"Image editor commands [A - M]",
 	"Image editor commands [N - Z]",
 	"Image filter commands",
-	"Image info commands"
+	"Image info commands",
+	"Game commands"
 ]
 
 
 async def show_help(message, client, ownerID):
 	#  bill = client.get_user(ownerID)
 
+	maxpage = 6
+
 	if len(message.content) == 5:
 		page_num = 0
 	else:
 		try:
 			page_num = int(message.content[6:])
-			if page_num > 5:
-				page_num = 5
+			if page_num > maxpage:
+				page_num = maxpage
 			if page_num < 0:
 				page_num = 0
 		except ValueError:  # The user likely entered in a command
@@ -594,8 +721,9 @@ async def show_help(message, client, ownerID):
 		for item in commands:
 			if item['page'] == page_num:
 				embed.add_field(name=item['command'], value=item['info'], inline=False)
-		embed.set_footer(text="Page " + str(page_num) + "/5     type ;help <page number> to see the other pages!",
-						 icon_url=shucks[message.id % 23])
+		embed.set_footer(text="Page " + str(page_num) + "/" + str(maxpage) + "     type ;help <page number> "
+																			 "to see the other pages!",
+						 icon_url=shucks[message.id % len(shucks)])
 	else:
 		embed.title = gen_pfx.capitalize() + " command help!"
 		embed.add_field(name="Description:", value=help_txt[0], inline=False)
