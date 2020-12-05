@@ -1244,14 +1244,16 @@ async def weezer_imagemaker(message):
 		await sent.delete()
 		return
 
+	#Defines the size, doesn't do anything else
 	size = 800, 800
 
+	#Crops the image using the defined size, and converts it to RGBA
 	input_img = rectangle_image_crop(input_img.convert("RGBA"), size)
 
-	response = requests.get(mask_url)
-	mask = Image.open(BytesIO(response.content))
+	response = requests.get(mask_url) #Gets the URL of the mask
+	mask = Image.open(BytesIO(response.content)) #Creates a variable from which the mask can be accessed. Image.open opens and identifies the file, but does not read image data.
 
-	blank = Image.new("RGBA", size, "rgba(210,210,210,255)")
+	blank = Image.new("RGBA", size, "rgba(210,210,210,255)") #Creates a new, blank image. Format: color_mode, size, colors
 	blank.paste(input_img, mask=input_img)
 
 	img_final = ImageChops.composite(mask.convert("RGB").convert("RGBA"), blank, mask)
@@ -1261,6 +1263,31 @@ async def weezer_imagemaker(message):
 	await sent.delete()
 	await message.channel.send(file=discord.File("weezer.png"))
 
+async def shuckle_imagemaker(message):
+	mask_url = 'https://i.imgur.com/uPuLqu3.png'
+
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	size = input_img.size #Retrieves the input image size, and then defines it as a variable
+
+	input_img = input_img.convert("RGBA")
+
+	response = requests.get(mask_url)
+	mask = Image.open(BytesIO(response.content))
+
+	blank = Image.new("RGBA", size, "rgba(210,210,210,255)")
+	blank.paste(input_img, mask=input_img)
+
+	img_final = ImageChops.composite(mask.convert("RGB").convert("RGBA"), blank, mask)
+
+	img_final.save("shuckle.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("shuckle.png"))
 
 async def to_rgb(message):
 	sent = await message.channel.send("Processing...")

@@ -11,7 +11,7 @@ searches = [{}]
 def init(google_key):
     global searchService
     try:
-        searchService = build('customsearch', 'v1', developerKey=google_key)
+        searchService = build('customsearch', 'v1', developerKey='AIzaSyCWVBNqIndYLWR5xNJL8t65rIrnOzz4TXw')
     except errors.HttpError:  # sometimes this happens for some reason
         print("Daily quota exceeded!")
 

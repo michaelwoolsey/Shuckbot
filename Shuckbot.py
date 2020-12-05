@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
+from modules import tags, imagesearch, metar, imagefun, help, save, games, cleverbot
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -175,6 +175,9 @@ async def on_message(message):
 
         elif content.lower().startswith(("weezer")):
             await imagefun.weezer_imagemaker(message)
+        
+        elif content.lower().startswith(("shuck")):
+            await imagefun.shuckle_imagemaker(message)
 
         elif content.lower().startswith(("game")):
             await games.game(message, client)
@@ -191,21 +194,21 @@ async def on_message(message):
         elif content.lower().startswith(("whatifitwaspurple")):
             await imagefun.whatifitwaspurple(message)
 
-    if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
+    elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
-    if message.clean_content.lower().startswith("p"):
+    elif message.clean_content.lower().startswith("p"):
         await imagesearch.jump(message)
 
-    if message.clean_content.lower() == "s":
+    elif message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    if message.clean_content.lower() == "based":
+    elif message.clean_content.lower() == "based":
         await message.channel.send("certified based")
 
-    if message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
+    elif message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
         await message.channel.send(
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
 
 
-client.run(clientKey)
+client.run('NzgzODU2NTA1MTcwNTU5MDA2.X8g1Qg.1yDFhwCCq8MS929NDZ_2agtXnHY')
