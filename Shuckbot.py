@@ -211,4 +211,4 @@ async def on_message(message):
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
 
 
-client.run('NzgzODU2NTA1MTcwNTU5MDA2.X8g1Qg.1yDFhwCCq8MS929NDZ_2agtXnHY')
+client.run(clientkey)
