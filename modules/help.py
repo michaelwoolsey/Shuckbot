@@ -418,6 +418,24 @@ commands = [
 	},
 
 	{
+		'prefix': ('shuck', ''),
+		'command': 'shuck <image URL / @user>',
+		'info': 'A shuckle will appear in your image',
+		'page': 3,
+		'help': ('Given an image URL, image attachment, user mention, or if no arguments are given: the last posted '
+				 'image, a shuckle will appear on your image',
+				 'Aliases:',
+				 'shuck',
+				 'Usage:',
+				 ';shuck <image URL>\n'
+				 ';shuck <user mention>\n'
+				 ';shuck\n',
+				 'Examples:',
+				 ';shuck https://img.pokemondb.net/artwork/large/shuckle.jpg\n'
+				 ';shuck @Shuckbot#6675\n')
+	},
+
+	{
 		'prefix': ('tesla', ''),
 		'command': 'tesla <image URL / @user>',
 		'info': 'Your image will appear in a tesla',
