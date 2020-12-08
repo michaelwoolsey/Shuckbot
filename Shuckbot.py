@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar
+from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
 
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
@@ -16,14 +16,6 @@ imagesearch.init(googleKey)
 logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
-commands = [
-    # {'command': 'prefix <character>', 'info': "Changes the command prefix for the server"},
-    {'command': 'i/im/img <query>', 'info': "Google image searches for an image"},
-    {'command': 't/tag <tag> | t/tag add/edit <tag> <content> | t/tag owner/remove <tag>',
-     'info': 'Access, add, edit, and remove a tag, or find its owner'},
-    {'command': 'metar <ICAO airport code>', 'info': 'Meteorological aviation data'},
-    {'command': 'ping', 'info': 'pong!'}
-]
 
 client = discord.Client()
 
@@ -50,23 +42,35 @@ async def on_message(message):
             now = datetime.now()
             sent = await message.channel.send("Measuring ping...")
             diff = sent.created_at - now
-            await sent.edit(content="Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
+            await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
-        if content.lower().startswith("help"):
-            bill = client.get_user(ownerID)
-            embed = discord.Embed()
-            embed.title = "Shuckbot help"
-            embed.type = "rich"
-            embed.colour = discord.Color.gold()
-            for item in commands:
-                embed.add_field(name=item['command'], value=item['info'], inline=False)
-            embed.set_footer(text="Shuckbot, by billofbong", icon_url=bill.avatar_url)
-            await message.channel.send(embed=embed)
+        elif content.lower().startswith(("help", "page")):
+            await help.show_help(message, client, ownerID)
 
-        if content.lower().startswith(("img", "i", "im")) and ' ' in message.clean_content:
-            await imagesearch.search(message)
+        elif content.lower().startswith(("img ", "i ", "im ")):
+            await imagesearch.google_search(message)
 
-        if content.lower().startswith(("tag", "t")):
+        elif content.lower().startswith("r34"):
+            await imagesearch.r34_search(message)
+
+        elif content.lower().startswith("invite"):
+            await message.channel.send(
+                "https://discord.com/api/oauth2/authorize?client_id=701021789664575498&permissions=272384&scope=bot")
+
+        elif content.lower().startswith(("pb", "picturebook", "photobook")):
+            if ' ' not in content:
+                await save.get_saved(message)
+
+            else:
+                arg = content.split(' ')[1].lower()  # the first argument
+
+                if arg == 'add' or arg == 'save':
+                    await save.save(message)
+
+                elif arg == 'remove' or arg == "delete" or arg == "rm":
+                    await save.remove(message, ownerID)
+
+        elif content.lower().startswith(("tag", "t ")):
             if ' ' not in message.clean_content:
                 await tags.syntax_error(message)
             else:
@@ -83,7 +87,8 @@ async def on_message(message):
 
                 elif arg == 'owner':
                     args = message.clean_content.split(' ')
-                    tag_owner = client.get_user(tags.owner(message))
+                    owner_id = tags.owner(message)
+                    tag_owner = await client.fetch_user(owner_id)
                     if tag_owner == 0:
                         await message.channel.send("Tag **" + args[2] + "** does not exist")
                     else:
@@ -92,21 +97,123 @@ async def on_message(message):
                 elif arg == 'list':
                     await tags.owned(message)
 
+                elif arg == 'random':
+                    await tags.get_random(message)
+
                 else:
                     await tags.get(message)
 
-        if content.lower().startswith("metar"):
+        elif content.lower().startswith("metar"):
             await metar.metar(message, avwxKey)
+
+        elif content.lower().startswith(("holding", "hold")):
+            await imagefun.holding_imagemaker(message)
+
+        elif content.lower().startswith(("exm", "exmilitary")):
+            await imagefun.exmilitary_imagemaker(message)
+
+        elif content.lower().startswith(("fantano", "fan", "review", "tnd")):
+            await imagefun.fantano_imagemaker(message)
+
+        elif content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1", "1\n")):
+            await imagefun.one_imagemaker(message)
+
+        elif content.lower().startswith("kim"):
+            await imagefun.kim_imagemaker(message)
+
+        elif content.lower().startswith(("e ", "emote")):
+            await imagefun.get_emoji(message, client)
+
+        elif content.lower().startswith(("sort", "pixelsort", "sortpixels")):
+            await imagefun.sort_pixels(message)
+
+        elif content.lower().startswith(("shuffle", "pixelshuffle")):
+            await imagefun.pixel_shuffle(message)
+
+        elif content.lower().startswith(("resize", "scale")):
+            await imagefun.resize_img(message)
+
+        elif content.lower().startswith("size"):
+            await imagefun.get_size(message)
+
+        elif content.lower().startswith(("twice", "mina")):
+            await imagefun.twice_imagemaker(message)
+
+        elif content.lower().startswith(("draw", "drawing")):
+            await imagefun.drawing_imagemaker(message)
+
+        elif content.lower().startswith("undo"):
+            await imagefun.undo_img(message)
+
+        elif content.lower().startswith(("heejin", "loona")):
+            await imagefun.heejin_imagemaker(message)
+
+        elif content.lower().startswith("school"):
+            await imagefun.school_imagemaker(message)
+
+        elif content.lower().startswith(("lecture", "lect")):
+            await imagefun.lecture_imagemaker(message)
+
+        elif content.lower().startswith("tesla"):
+            await imagefun.tesla_imagemaker(message)
+
+        elif content.lower().startswith("osu"):
+            await imagefun.osu_imagemaker(message)
+
+        elif content.lower().startswith(("color", "colour", "c ")):
+            await imagefun.get_colour_from_hex(message)
+
+        elif content.lower().startswith(("mix", "noisy")):
+            await imagefun.mixer(message)
+
+        elif content.lower().startswith("noise"):
+            await imagefun.noise_imagemaker(message)
+
+        elif content.lower().startswith(("mokou", "gf")):
+            await imagefun.mokou_imagemaker(message)
+
+        elif content.lower().startswith(("shift")):
+            await imagefun.image_shift(message)
+
+        elif content.lower().startswith(("megumin", "megu")):
+            await imagefun.megumin_imagemaker(message)
+
+        elif content.lower().startswith(("weezer")):
+            await imagefun.weezer_imagemaker(message)
+
+        elif content.lower().startswith(("game", "g ")):
+            await games.game(message, client)
+
+        elif content.lower().startswith(("rgb", "torgb", "2rgb")):
+            await imagefun.to_rgb(message)
+
+        elif content.lower().startswith(("a", "avatar")):
+            await imagefun.get_avatar(message)
+
+        elif content.lower().startswith(("purple")):
+            await imagefun.purple(message)
+
+        elif content.lower().startswith(("whatifitwaspurple")):
+            await imagefun.whatifitwaspurple(message)
+
+        elif content.lower().startswith(("tom", "tomscott")):
+            await imagefun.tom_imagemaker(message)
 
     if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
-    if message.clean_content.lower().startswith("p") and len(message.clean_content.lower()) <= 3:
+    if message.clean_content.lower().startswith("p"):
         await imagesearch.jump(message)
 
     if message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
+    if message.clean_content.lower() == "based":
+        await message.channel.send("certified based")
+
+    if message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
+        await message.channel.send(
+            cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
 
 
 client.run(clientKey)
