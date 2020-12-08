@@ -1285,9 +1285,16 @@ async def tom_imagemaker(message):
         mask = mask.resize((input_img.height, input_img.height), resample=Image.BILINEAR)
     else:
         mask = mask.resize((input_img.width, input_img.width), resample=Image.BILINEAR)
+
+    # blank_mask = Image.new("RGBA", size, "rgba(0,0,0,0)")
+    # blank_mask.paste(mask, box=(input_img.width - mask.width, input_img.height - mask.height), mask=mask)
     blank = Image.new("RGBA", size, "rgba(210,210,210,255)")
     blank.paste(input_img, mask=input_img)
     blank.paste(mask, box=(input_img.width - mask.width, input_img.height - mask.height), mask=mask)
+
+    # img_final = ImageChops.composite(blank_mask.convert("RGB").convert("RGBA"), blank, blank_mask)
+
+    # img_final.save("tom.png")
     blank.save("tom.png")
 
     await sent.delete()

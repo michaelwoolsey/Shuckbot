@@ -1,5 +1,6 @@
 from tinydb import TinyDB, Query
 import discord
+import random
 
 tagsDB = TinyDB('tags.json')
 
@@ -62,7 +63,7 @@ async def edit(message, owner_id):
 def owner(message):
     args = message.clean_content.split(' ', 3)
     result = tagsDB.search(Query().tag == args[2].lower())
-    if not result:
+    if result is None:
         return 0
     else:
         return result[0]['owner']
@@ -92,3 +93,10 @@ async def get(message):
         await message.channel.send("Tag **" + args[1] + "** not found!")
     else:
         await message.channel.send(result[0]['content'])
+
+
+async def get_random(message):
+    result = tagsDB.all()
+    length = len(result)
+    rand = random.randint(0, length - 1)
+    await message.channel.send(result[rand]['content'])
