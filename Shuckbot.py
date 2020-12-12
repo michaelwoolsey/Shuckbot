@@ -199,19 +199,22 @@ async def on_message(message):
         elif content.lower().startswith(("tom", "tomscott")):
             await imagefun.tom_imagemaker(message)
 
-    if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
+        elif content.lower().startswith(("shuck")):
+            await imagefun.shuckle_imagemaker(message)
+
+    elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
-    if message.clean_content.lower().startswith("p"):
+    elif message.clean_content.lower().startswith("p"):
         await imagesearch.jump(message)
 
-    if message.clean_content.lower() == "s":
+    elif message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    if message.clean_content.lower() == "based":
+    elif message.clean_content.lower() == "based":
         await message.channel.send("certified based")
 
-    if message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
+    elif message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
         await message.channel.send(
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
 
