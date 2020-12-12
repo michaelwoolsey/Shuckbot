@@ -1397,3 +1397,43 @@ async def mixer(message):
     input_img.save("mix.png")
     await sent.delete()
     await message.channel.send(file=discord.File("mix.png"))
+
+    
+async def shuckle_imagemaker(message):
+	mask_url = 'https://i.imgur.com/RmuyEk0.png' #448x448
+
+	sent = await message.channel.send("Processing...")
+	input_img = await read_image(message)
+	if input_img is None:
+		await sent.delete()
+		return
+
+	mdim = 448
+
+	width, height = input_img.size 
+
+	input_img = input_img.convert("RGBA")
+
+	response = requests.get(mask_url)
+	mask = Image.open(BytesIO(response.content))
+	
+	if width and height > mdim*2:
+		resize = int(width/1.05), int(height/1.05)
+		w2, h2 = resize
+		while w2 > mdim*2.5 or h2 > mdim*2.5:			
+				resize = int(w2/1.05), int(h2/1.05)
+				w2, h2 = resize
+				input_img.thumbnail(resize, 1)
+				print(resize)
+		else:
+			input_img.paste(mask, (0,(int(h2-mdim))), mask)
+	else:
+		resize = int(width/1.5), int(height/1.5)
+		mask.thumbnail(resize, resample=1)
+		mw, mh = mask.size
+		input_img.paste(mask, (0,(int(height-mh))), mask)
+
+	input_img.save("shuckle.png")
+
+	await sent.delete()
+	await message.channel.send(file=discord.File("shuckle.png"))
