@@ -1,19 +1,9 @@
-import logging
+import logging, re
 from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
-
-with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
-    lines = file.read().splitlines()
-    googleKey = lines[0]
-    ownerID = int(lines[1])
-    avwxKey = lines[2]
-    clientKey = lines[3]
-
-imagesearch.init(googleKey)
-logging.basicConfig(level=logging.INFO)
+from modules import tags, imagesearch, metar, imagefun, help, save, games
 
 defaultPrefix = ';'
 
@@ -202,6 +192,10 @@ async def on_message(message):
         elif content.lower().startswith(("shuck")):
             await imagefun.shuckle_imagemaker(message)
 
+        elif content.lower().startswith(("hirtsifier")):
+            hirt = re.sub('b|m|n|\,|\.|\<|\>', '', content)
+            await message.channel.send(str(hirt[10:]))
+
     elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
@@ -211,12 +205,12 @@ async def on_message(message):
     elif message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    elif message.clean_content.lower() == "based":
-        await message.channel.send("certified based")
-
     elif message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
         await message.channel.send(
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
+    
+    if message.clean_content.lower() == "based":
+        await message.channel.send("certified based")
 
 
 client.run(clientKey)
