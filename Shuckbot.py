@@ -204,7 +204,7 @@ async def on_message(message):
 
         elif content.lower().startswith(("hirtsifier")):
             hirt = re.sub('b|m|n|\,|\.|\<|\>', '', content)
-            await message.channel.send(str(hirt[10:]))
+            await message.channel.send(hirt[10:])
 
     elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
