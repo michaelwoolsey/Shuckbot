@@ -3,7 +3,17 @@ from datetime import datetime
 
 import discord
 
-from modules import tags, imagesearch, metar, imagefun, help, save, games
+from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
+
+with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
+    lines = file.read().splitlines()
+    googleKey = lines[0]
+    ownerID = int(lines[1])
+    avwxKey = lines[2]
+    clientKey = lines[3]
+
+imagesearch.init(googleKey)
+logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
 
