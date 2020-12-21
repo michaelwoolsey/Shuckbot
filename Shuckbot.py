@@ -208,9 +208,6 @@ async def on_message(message):
     if message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    if message.clean_content.lower() == "based":
-        await message.channel.send("certified based")
-
     if message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
         await message.channel.send(
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
