@@ -5,14 +5,16 @@ import discord
 
 from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
 
+params = {}
+
 with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
     lines = file.read().splitlines()
-    googleKey = lines[0]
-    ownerID = int(lines[1])
-    avwxKey = lines[2]
-    clientKey = lines[3]
+    for line in lines:
+        x = line.split("=")
+        if len(x) == 2:
+            params[x[0]] = x[1]
 
-imagesearch.init(googleKey)
+imagesearch.init(params["googleKey"], params["cx"])
 logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
@@ -45,7 +47,7 @@ async def on_message(message):
             await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
         elif content.lower().startswith(("help", "page")):
-            await help.show_help(message, client, ownerID)
+            await help.show_help(message, client, params["ownerID"])
 
         elif content.lower().startswith(("img ", "i ", "im ")):
             await imagesearch.google_search(message)
@@ -55,7 +57,7 @@ async def on_message(message):
 
         elif content.lower().startswith("invite"):
             await message.channel.send(
-                "https://discord.com/api/oauth2/authorize?client_id=701021789664575498&permissions=272384&scope=bot")
+                params["url"])
 
         elif content.lower().startswith(("pb", "picturebook", "photobook")):
             if ' ' not in content:
@@ -68,7 +70,7 @@ async def on_message(message):
                     await save.save(message)
 
                 elif arg == 'remove' or arg == "delete" or arg == "rm":
-                    await save.remove(message, ownerID)
+                    await save.remove(message, params["ownerID"])
 
         elif content.lower().startswith(("tag", "t ")):
             if ' ' not in message.clean_content:
@@ -80,10 +82,10 @@ async def on_message(message):
                     await tags.add(message)
 
                 elif arg == 'remove' or arg == "delete":
-                    await tags.remove(message, ownerID)
+                    await tags.remove(message, params["ownerID"])
 
                 elif arg == 'edit':
-                    await tags.edit(message, ownerID)
+                    await tags.edit(message, params["ownerID"])
 
                 elif arg == 'owner':
                     args = message.clean_content.split(' ')
@@ -104,7 +106,7 @@ async def on_message(message):
                     await tags.get(message)
 
         elif content.lower().startswith("metar"):
-            await metar.metar(message, avwxKey)
+            await metar.metar(message, params["avwxKey"])
 
         elif content.lower().startswith(("holding", "hold")):
             await imagefun.holding_imagemaker(message)
@@ -208,12 +210,9 @@ async def on_message(message):
     if message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    if message.clean_content.lower() == "based":
-        await message.channel.send("certified based")
-
     if message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
         await message.channel.send(
             cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
 
 
-client.run(clientKey)
+client.run(params["token"])
