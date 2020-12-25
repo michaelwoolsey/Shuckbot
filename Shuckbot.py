@@ -12,7 +12,7 @@ with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx k
     for line in lines:
         x = line.split("=")
         if len(x) == 2:
-            params[x[0]] = x[1]
+            params[x[0]] = x[1].strip()
 
 imagesearch.init(params["googleKey"], params["cx"])
 logging.basicConfig(level=logging.INFO)
