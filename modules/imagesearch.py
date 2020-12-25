@@ -6,14 +6,12 @@ from googleapiclient import errors
 
 searchService = None
 searches = [{}]
-searchEngineID = None
 
 
-def init(google_key, cx):
-    global searchService, searchEngineID
+def init(google_key):
+    global searchService
     try:
         searchService = build('customsearch', 'v1', developerKey=google_key)
-        searchEngineID = cx
     except errors.HttpError:  # sometimes this happens for some reason
         print("Daily quota exceeded!")
 
@@ -22,7 +20,7 @@ async def google_search(message):
     try:
         query = message.clean_content.split(' ', 1)[1]  # splits the img and the rest of the command
         res = searchService.cse().list(q=query,
-                                       cx=searchEngineID,
+                                       cx="017178301722928584583:yi4kptiqtbq",
                                        searchType="image").execute()
         images = []
         length = len(res['items'])

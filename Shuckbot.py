@@ -14,7 +14,7 @@ with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx k
         if len(x) == 2:
             params[x[0]] = x[1].strip()
 
-imagesearch.init(params["googleKey"], params["cx"])
+imagesearch.init(params["googleKey"])
 logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
