@@ -4,16 +4,9 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
+from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, games, parameters
 
-params = {}
-
-with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
-    lines = file.read().splitlines()
-    for line in lines:
-        x = line.split("=")
-        if len(x) == 2:
-            params[x[0]] = x[1].strip()
+params = parameters.params
 
 imagesearch.init(params["googleKey"])
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +28,7 @@ async def ping(ctx):
 
 @bot.command(aliases=["help"])
 async def page(ctx):
-    await help.show_help(ctx.message, bot, params["ownerID"])
+    await help.show_help(ctx.message)
 
 
 @bot.command(aliases=["i, im, image"])
