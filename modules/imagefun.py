@@ -86,11 +86,6 @@ async def read_image(message):
                 await message.channel.send("Your attached image is not a valid file type! (png, jpg, gif)")
                 return
         else:
-            temp = await search_previous()
-            if temp is None:
-                await message.channel.send("Your URL is not properly formatted! Currently I can only process URL's "
-                                           "that end in .png, .jpg, .gif, or .webp")
-                return
             await message.channel.send("You need to add an image to your message!")
             return
 
