@@ -91,7 +91,6 @@ async def read_image(message):
                 await message.channel.send("Your URL is not properly formatted! Currently I can only process URL's "
                                            "that end in .png, .jpg, .gif, or .webp")
                 return
-            return temp
             await message.channel.send("You need to add an image to your message!")
             return
 
