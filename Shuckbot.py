@@ -31,7 +31,7 @@ async def page(ctx):
     await help.show_help(ctx.message)
 
 
-@bot.command(aliases=["i, im, image"])
+@bot.command(aliases=["i", "im", "image"])
 async def img(ctx):
     await imagesearch.google_search(ctx.message)
 
@@ -229,7 +229,7 @@ async def game(ctx):
     await games.game(ctx.message, bot)
 
 
-@bot.command(aliases=["torgb, 2rgb"])
+@bot.command(aliases=["torgb", "2rgb"])
 async def rgb(ctx):
     await imagefun.to_rgb(ctx.message)
 
