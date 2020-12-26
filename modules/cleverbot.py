@@ -1,16 +1,8 @@
 import cleverbot
+from modules import fileutils
 
-params = {}
+cb = cleverbot.Cleverbot(fileutils.params["cleverbot"])
 
-# TODO: This should be placed into its own method
-with open("keys.txt", "r") as file:
-    lines = file.read().splitlines()
-    for line in lines:
-        x = line.split("=")
-        if len(x) == 2:
-            params[x[0]] = x[1].strip()
-
-cb = cleverbot.Cleverbot(params["cleverbot"])
 
 def cleverbot_message(message, username):
     if len(message.clean_content) < len(username) + 2:

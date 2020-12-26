@@ -28,19 +28,16 @@ async def read_image(message):
     async def search_previous():
         m = await message.channel.history(limit=20).flatten()
         for i in range(20):
-            if m[i].attachments:
-                if is_valid_filetype(m[i].attachments[0].url):
-                    readURL = m[i].attachments[0].url
-                    response = requests.get(readURL)
-                    image = Image.open(BytesIO(response.content))
-                    return image
-            if m[i].embeds:
-                if m[i].embeds[0].image:
-                    if is_valid_filetype(m[i].embeds[0].image.url):
-                        readURL = m[i].embeds[0].image.url
-                        response = requests.get(readURL)
-                        image = Image.open(BytesIO(response.content))
-                        return image
+            if m[i].attachments and is_valid_filetype(m[i].attachments[0].url):
+                readURL = m[i].attachments[0].url
+                response = requests.get(readURL)
+                image = Image.open(BytesIO(response.content))
+                return image
+            if m[i].embeds and m[i].embeds[0].image and is_valid_filetype(m[i].embeds[0].image.url):
+                readURL = m[i].embeds[0].image.url
+                response = requests.get(readURL)
+                image = Image.open(BytesIO(response.content))
+                return image
             words = m[i].clean_content.split(' ')
             for word in words:
                 if is_valid_filetype(word) and word[0:4] == "http":
