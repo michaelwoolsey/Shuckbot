@@ -1,7 +1,7 @@
 import cleverbot
-from modules import fileutils
+from modules import parameters
 
-cb = cleverbot.Cleverbot(fileutils.params["cleverbot"])
+cb = cleverbot.Cleverbot(parameters.params["cleverbot"])
 
 
 def cleverbot_message(message, username):
