@@ -10,7 +10,7 @@ with open("keys.txt", "r") as file:
         if len(x) == 2:
             params[x[0]] = x[1].strip()
 
-cb = cleverbot.Cleverbot(params["token"])
+cb = cleverbot.Cleverbot(params["cleverbot"])
 
 def cleverbot_message(message, username):
     if len(message.clean_content) < len(username) + 2:
