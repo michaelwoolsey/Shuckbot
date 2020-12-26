@@ -83,8 +83,11 @@ async def read_image(message):
                 await message.channel.send("Your attached image is not a valid file type! (png, jpg, gif)")
                 return
         else:
-            await message.channel.send("You need to add an image to your message!")
-            return
+            temp = await search_previous()
+            if temp is None:
+                await message.channel.send("Your URL is not properly formatted or I couldn't find an image!")
+                return
+            return temp
 
 
 # taken from https://hhsprings.bitbucket.io/docs/programming/examples/python/PIL/Image__class_Image.html
