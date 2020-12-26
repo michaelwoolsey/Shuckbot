@@ -50,16 +50,16 @@ async def invite(ctx):
 @bot.command(aliases=["picturebook", "photobook"])
 async def pb(ctx):
     if ' ' not in ctx.message:
-        await save.get_saved(ctx.message)
+        await picturebook.get_saved(ctx.message)
 
     else:
         _arg = ctx.message.split(' ')[1].lower()  # the first argument
 
         if _arg == 'add' or _arg == 'save':
-            await save.save(ctx.message)
+            await picturebook.save(ctx.message)
 
         elif _arg == 'remove' or _arg == "delete" or _arg == "rm":
-            await save.remove(ctx.message, params["ownerID"])
+            await picturebook.remove(ctx.message, params["ownerID"])
 
 
 @bot.command(aliases=["t"])
@@ -252,6 +252,11 @@ async def whatifitwaspurple(ctx):
 @bot.command(aliases=["tom"])
 async def tomscott(ctx):
     await imagefun.tom_imagemaker(ctx.message)
+
+
+@bot.command()
+async def sickos(ctx):
+    await imagefun.sickos_imagemaker(ctx.message)
 
 
 @bot.event
