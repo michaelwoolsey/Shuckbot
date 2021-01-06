@@ -1,6 +1,6 @@
 discord.py==1.5.1
 requests==2.23.0
-cairosvg==2.4.2
+cairosvg==2.5.1
 google_api_python_client==1.8.3
 numpy==1.18.4
 Pillow==7.1.2
