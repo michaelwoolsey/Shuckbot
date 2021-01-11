@@ -24,7 +24,7 @@ async def game(message, client):
             await colour_guesser_multi(message, client)
         else:
             await colour_guesser(message, client)
-    elif args[0] in ("colour"):
+    elif args[0] == "colour":
         if len(args) > 1 and args[1] in ("m", "mp", "multi", "multiplayer"):
             await colour_guesser_multi(message, client, "u")
         else:
@@ -60,6 +60,7 @@ async def colour_guesser(message, client, _letter=""):
         img = Image.new("RGB", (size, size), ImageColor.getcolor(('#' + col), "RGB"))
     except ValueError:
         await message.channel.send("Value Error has been thrown!")
+        return
     else:
         img.save("colourguess.png")
         await message.channel.send(mention + ", here is your colo" + _letter + "r! Try to guess its hex code!",
@@ -121,11 +122,11 @@ async def colour_guesser_multi(message, client, _letter="", game_time=15):
     while len(col) < 6:
         col = '0' + col
         print(col)
-    msg = None
     try:
         img = Image.new("RGB", (size, size), ImageColor.getcolor(('#' + col), "RGB"))
     except ValueError:
         await message.channel.send("Value Error has been thrown!")
+        return
     else:
         img.save("colourguess.png")
         msg = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
@@ -184,8 +185,7 @@ async def colour_guesser_multi(message, client, _letter="", game_time=15):
         img.save("clrguessresult.png")
         await message.channel.send(
             "The actual colo" + _letter + "r was " + col + "!\n" + client.get_user(int(winner[0])).mention
-            + " got " + str(int(np.ceil(winner[2]))) + "/100 points\n"
-            , file=discord.File("clrguessresult.png"))
+            + " got " + str(int(np.ceil(winner[2]))) + "/100 points\n", file=discord.File("clrguessresult.png"))
         to_send = ""
         for x in range(0, len(final_guesses)):
             to_send += str(x + 1) + ". " + client.get_user(final_guesses[x][0]).mention + ": " + \
@@ -513,7 +513,7 @@ flags = [
 
 async def flag_guesser(message, client, difficulty=0):
     lengths = [0, 0, 0, 0, 0]
-    typeF = ["country", "country", "country", "country", "state", "flag", "flag"]
+    type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
     for c in flags:
         lengths[c["difficulty"]-1] += 1
     # print(lengths)
@@ -548,24 +548,16 @@ async def flag_guesser(message, client, difficulty=0):
     #     country_index = 0
     # country_index = 30
 
-    try:
-        response = requests.get(flags[country_index]["url"])
-        flag_img = Image.open(BytesIO(response.content))
-        flag_img.save("flag.png")
-    except:
-        print(flags[country_index]["url"])
-        return
+    response = requests.get(flags[country_index]["url"])
+    flag_img = Image.open(BytesIO(response.content))
+    flag_img.save("flag.png")
 
-    embed = discord.Embed(title="You have " + str(game_time) + " seconds to guess the " + typeF[difficulty] + "!")
+    embed = discord.Embed(title="You have " + str(game_time) + " seconds to guess the " + type_f[difficulty] + "!")
     embed.colour = discord.Color.gold()
     embed.type = "rich"
 
     embed.set_image(url="attachment://flag.png")
-    try:
-        await message.channel.send(embed=embed, file=discord.File("flag.png"))
-    except:
-        print(flags[country_index]["url"])
-        return
+    await message.channel.send(embed=embed, file=discord.File("flag.png"))
     # await message.channel.send("You have " + str(game_time) + " seconds to guess the flag!", file=discord.File("flag.png"))
 
     def check(m):
@@ -576,19 +568,18 @@ async def flag_guesser(message, client, difficulty=0):
             return False
         return m.channel == message.channel and (m.content.lower() == flags[country_index]["name"].lower())
 
-    t = time.time()
     try:
         msg = await client.wait_for('message', check=check, timeout=game_time)
-    except:
+    except asyncio.TimeoutError:
         try:
-            await message.channel.send("Sorry, nobody got the " + typeF[difficulty] + " correct! The correct answer was: " + flags[country_index]["name"])
+            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + flags[country_index]["name"])
         except TypeError:
-            await message.channel.send("Sorry, nobody got the " + typeF[difficulty] + " correct! The correct answer was: " + flags[country_index]["name"][0])
+            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + flags[country_index]["name"][0])
         return
     try:
-        await message.channel.send("Good job " + msg.author.mention + "! The " + typeF[difficulty] + " was " + flags[country_index]['name'])
+        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + flags[country_index]['name'])
     except TypeError:
-        await message.channel.send("Good job " + msg.author.mention + "! The " + typeF[difficulty] + " was " + flags[country_index]['name'][0])
+        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + flags[country_index]['name'][0])
 
 
 

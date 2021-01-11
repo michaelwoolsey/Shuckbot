@@ -22,6 +22,7 @@
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+.idea/*
 
 # Gradle
 .idea/**/gradle.xml
@@ -73,3 +74,8 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+
+# Other stuff
+*pyc
+picturebook.json
+emoji.png 

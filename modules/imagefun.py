@@ -28,19 +28,16 @@ async def read_image(message):
     async def search_previous():
         m = await message.channel.history(limit=20).flatten()
         for i in range(20):
-            if m[i].attachments:
-                if is_valid_filetype(m[i].attachments[0].url):
-                    readURL = m[i].attachments[0].url
-                    response = requests.get(readURL)
-                    image = Image.open(BytesIO(response.content))
-                    return image
-            if m[i].embeds:
-                if m[i].embeds[0].image:
-                    if is_valid_filetype(m[i].embeds[0].image.url):
-                        readURL = m[i].embeds[0].image.url
-                        response = requests.get(readURL)
-                        image = Image.open(BytesIO(response.content))
-                        return image
+            if m[i].attachments and is_valid_filetype(m[i].attachments[0].url):
+                readURL = m[i].attachments[0].url
+                response = requests.get(readURL)
+                image = Image.open(BytesIO(response.content))
+                return image
+            if m[i].embeds and m[i].embeds[0].image and is_valid_filetype(m[i].embeds[0].image.url):
+                readURL = m[i].embeds[0].image.url
+                response = requests.get(readURL)
+                image = Image.open(BytesIO(response.content))
+                return image
             words = m[i].clean_content.split(' ')
             for word in words:
                 if is_valid_filetype(word) and word[0:4] == "http":
@@ -88,12 +85,9 @@ async def read_image(message):
         else:
             temp = await search_previous()
             if temp is None:
-                await message.channel.send("Your URL is not properly formatted! Currently I can only process URL's "
-                                           "that end in .png, .jpg, .gif, or .webp")
+                await message.channel.send("Your URL is not properly formatted or I couldn't find an image!")
                 return
             return temp
-            await message.channel.send("You need to add an image to your message!")
-            return
 
 
 # taken from https://hhsprings.bitbucket.io/docs/programming/examples/python/PIL/Image__class_Image.html
@@ -1266,11 +1260,60 @@ async def weezer_imagemaker(message):
     await message.channel.send(file=discord.File("weezer.png"))
 
 
+async def sickos_imagemaker(message):
+    mask_url = 'https://i.imgur.com/38TUcs6.png'
+
+    sent = await message.channel.send("Processing...")
+    try:
+        input_img = await read_image(message)
+    except:
+        await sent.edit(content="There\'s something wrong with your image :(")
+        return
+    if input_img is None:
+        await sent.delete()
+        return
+
+
+    MAXSZ = 800
+    if input_img.height > MAXSZ or input_img.width > MAXSZ:
+        input_img = input_img.resize((MAXSZ, input_img.height*MAXSZ//input_img.width) if input_img.width > input_img.height
+                                                else (input_img.width*MAXSZ//input_img.height, MAXSZ), resample=Image.BILINEAR).convert("RGBA")
+    print((input_img.size))
+    response = requests.get(mask_url)
+    mask = Image.open(BytesIO(response.content))
+
+    blank = Image.new("RGBA", input_img.size, "rgba(210,210,210,255)")
+    try:
+        blank.paste(input_img, mask=input_img)
+    except:
+        blank.paste(input_img)
+
+    if input_img.width > input_img.height:
+        mask = mask.resize(
+            (int(mask.width * (input_img.height/mask.height)), int(input_img.height)),
+            resample=Image.BILINEAR)
+        blank.paste(mask, box=(0, 0), mask=mask)
+    else:
+        mask = mask.resize(
+            (int(input_img.width / 2), int(mask.height * (input_img.width / 2)/mask.width)) if input_img.width <= 382 else mask.size,
+            resample=Image.BILINEAR)
+        blank.paste(mask, box=(0, int(input_img.height/2 - mask.height/2)), mask=mask)
+
+    blank.save("sickos.png")
+
+    await sent.delete()
+    await message.channel.send(file=discord.File("sickos.png"))
+
+
 async def tom_imagemaker(message):
     mask_url = 'https://i.imgur.com/XUt3CFq.png'
 
     sent = await message.channel.send("Processing...")
-    input_img = await read_image(message)
+    try:
+        input_img = await read_image(message)
+    except:
+        await sent.edit(content="There\'s something wrong with your image :(")
+        return
     if input_img is None:
         await sent.delete()
         return

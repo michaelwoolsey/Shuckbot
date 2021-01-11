@@ -1,10 +1,7 @@
 import cleverbot
+from modules import parameters
 
-with open("keys.txt", "r") as file:
-    lines = file.read().splitlines()
-    cbKey = lines[4]
-
-cb = cleverbot.Cleverbot(cbKey)
+cb = cleverbot.Cleverbot(parameters.params["cleverbot"])
 
 
 def cleverbot_message(message, username):

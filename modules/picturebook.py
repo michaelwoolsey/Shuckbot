@@ -4,7 +4,6 @@ import requests
 
 from modules import imagesearch
 from tinydb import TinyDB, Query
-import discord
 
 saved = TinyDB("picturebook.json")
 
@@ -35,7 +34,7 @@ async def read_image(message):
     if len(args) >= 2:
         if args[1][0:4] == "http" and is_valid_filetype(args[1]):
             try:
-                response = requests.get(args[1])
+                requests.get(args[1])
             except requests.exceptions.ConnectionError:
                 await message.channel.send("Your image is invalid!")
                 return
