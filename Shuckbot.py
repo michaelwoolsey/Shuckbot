@@ -1,212 +1,268 @@
-import logging, re
+import logging
 from datetime import datetime
 
 import discord
+from discord.ext import commands
 
-from modules import tags, imagesearch, metar, imagefun, help, save, cleverbot, games
+from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, games, parameters
 
-with open("keys.txt", "r") as file:  # file format: google key, owner ID, avwx key, bot client key on separate lines
-    lines = file.read().splitlines()
-    googleKey = lines[0]
-    ownerID = int(lines[1])
-    avwxKey = lines[2]
-    clientKey = lines[3]
+params = parameters.params
 
-imagesearch.init(googleKey)
+imagesearch.init(params["googleKey"])
 logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
 
-client = discord.Client()
+
+bot = commands.Bot(command_prefix=';', intents=discord.Intents.default())
+bot.remove_command("help")  # discord.py ships with a default help command: must remove it
 
 
-@client.event
+@bot.command()
+async def ping(ctx):
+    now = datetime.now()
+    sent = await ctx.message.channel.send("Measuring ping...")
+    diff = sent.created_at - now
+    await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
+
+
+@bot.command(aliases=["help"])
+async def page(ctx):
+    await help.show_help(ctx.message)
+
+
+@bot.command(aliases=["i", "im", "image"])
+async def img(ctx):
+    await imagesearch.google_search(ctx.message)
+
+
+@bot.command()
+async def r34(ctx):
+    await imagesearch.r34_search(ctx.message)
+
+
+@bot.command()
+async def invite(ctx):
+    await ctx.message.channel.send(
+        params["url"])
+
+
+@bot.command(aliases=["picturebook", "photobook"])
+async def pb(ctx):
+    if ' ' not in ctx.message:
+        await picturebook.get_saved(ctx.message)
+
+    else:
+        _arg = ctx.message.split(' ')[1].lower()  # the first argument
+
+        if _arg == 'add' or _arg == 'save':
+            await picturebook.save(ctx.message)
+
+        elif _arg == 'remove' or _arg == "delete" or _arg == "rm":
+            await picturebook.remove(ctx.message, params["ownerID"])
+
+
+@bot.command(aliases=["t"])
+async def tag(ctx, *args):
+    if len(args) == 0:
+        await tags.syntax_error(ctx.message)
+    else:
+        if args[0] == 'add':
+            await tags.add(ctx.message)
+
+        elif args[0] == 'remove' or args[0] == "delete":
+            await tags.remove(ctx.message, params["ownerID"])
+
+        elif args[0] == 'edit':
+            await tags.edit(ctx.message, params["ownerID"])
+
+        elif args[0] == 'owner':
+            owner_id = tags.owner(ctx.message)
+            tag_owner = await bot.fetch_user(owner_id)
+            if tag_owner == 0:
+                await ctx.message.channel.send("Tag **" + args[2] + "** does not exist")
+            else:
+                await ctx.message.channel.send("Tag **" + args[2] + "** is owned by `" + str(tag_owner) + "`")
+
+        elif args[0] == 'list':
+            await tags.owned(ctx.message)
+
+        elif args[0] == 'random':
+            await tags.get_random(ctx.message)
+
+        else:
+            await tags.get(ctx.message)
+
+
+@bot.command()
+async def metar(ctx):
+    await metar.metar(ctx.message, params["avwxKey"])
+
+
+@bot.command(aliases=["hold"])
+async def holding(ctx):
+    await imagefun.holding_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["exmilitary"])
+async def exm(ctx):
+    await imagefun.exmilitary_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["fan", "review", "tnd"])
+async def fantano(ctx):
+    await imagefun.fantano_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["1bit", "1"])
+async def one(ctx):
+    await imagefun.one_imagemaker(ctx.message)
+
+
+@bot.command()
+async def kim(ctx):
+    await imagefun.kim_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["e"])
+async def emote(ctx):
+    await imagefun.get_emoji(ctx.message, bot)
+
+
+@bot.command(aliases=["pixelsort", "sortpixels"])
+async def sort(ctx):
+    await imagefun.sort_pixels(ctx.message)
+
+
+@bot.command(aliases=["pixelshuffle"])
+async def shuffle(ctx):
+    await imagefun.pixel_shuffle(ctx.message)
+
+
+@bot.command(aliases=["scale"])
+async def resize(ctx):
+    await imagefun.resize_img(ctx.message)
+
+
+@bot.command()
+async def size(ctx):
+    await imagefun.get_size(ctx.message)
+
+
+@bot.command(aliases=["mina"])
+async def twice(ctx):
+    await imagefun.twice_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["drawing"])
+async def draw(ctx):
+    await imagefun.drawing_imagemaker(ctx.message)
+
+
+@bot.command()
+async def undo(ctx):
+    await imagefun.undo_img(ctx.message)
+
+
+@bot.command(aliases=["loona"])
+async def heejin(ctx):
+    await imagefun.heejin_imagemaker(ctx.message)
+
+
+@bot.command()
+async def school(ctx):
+    await imagefun.school_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["lect"])
+async def lecture(ctx):
+    await imagefun.lecture_imagemaker(ctx.message)
+
+
+@bot.command()
+async def tesla(ctx):
+    await imagefun.tesla_imagemaker(ctx.message)
+
+
+@bot.command()
+async def osu(ctx):
+    await imagefun.osu_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["colour", "c"])
+async def color(ctx):
+    await imagefun.get_colour_from_hex(ctx.message)
+
+
+@bot.command(aliases=["noisy"])
+async def mix(ctx):
+    await imagefun.mixer(ctx.message)
+
+
+@bot.command()
+async def noise(ctx):
+    await imagefun.noise_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["gf"])
+async def mokou(ctx):
+    await imagefun.mokou_imagemaker(ctx.message)
+
+
+@bot.command()
+async def shift(ctx):
+    await imagefun.image_shift(ctx.message)
+
+
+@bot.command(aliases=["megu"])
+async def megumin(ctx):
+    await imagefun.megumin_imagemaker(ctx.message)
+
+
+@bot.command()
+async def weezer(ctx):
+    await imagefun.weezer_imagemaker(ctx.message)
+
+
+@bot.command(aliases=["g"])
+async def game(ctx):
+    await games.game(ctx.message, bot)
+
+
+@bot.command(aliases=["torgb", "2rgb"])
+async def rgb(ctx):
+    await imagefun.to_rgb(ctx.message)
+
+
+@bot.command(aliases=["a"])
+async def avatar(ctx):
+    await imagefun.get_avatar(ctx.message)
+
+
+@bot.command()
+async def purple(ctx):
+    await imagefun.purple(ctx.message)
+
+
+@bot.command()
+async def whatifitwaspurple(ctx):
+    await imagefun.whatifitwaspurple(ctx.message)
+
+
+@bot.command(aliases=["tom"])
+async def tomscott(ctx):
+    await imagefun.tom_imagemaker(ctx.message)
+
+
+@bot.command()
+async def sickos(ctx):
+    await imagefun.sickos_imagemaker(ctx.message)
+
+
+@bot.event
 async def on_message(message):
-    if message.clean_content.startswith(';') and not message.author.bot and \
-            len(message.clean_content) > 1:  # prefixes.search(q.guild == message.guild.id)[0]['prefix'])
-
-        content = message.clean_content[1:]  # remove prefix
-
-        # if content.lower().startswith("prefix"):
-        #     if not message.author.permissions_in(message.channel).manage_roles:
-        #         await message.channel.send("You must have the **Manage Roles** permission to do that.")
-        #     elif len(content) < 8 or content[7] == ' ':
-        #         await message.channel.send("Enter a character to set the prefix to.")
-        #     elif len(content) > 8:
-        #         await message.channel.send("Only enter one character to set the prefix to.")
-        #     else:
-        #         prefixes.update({'prefix': content[7]}, q.guild == message.guild.id)
-        #         await message.channel.send("Prefix changed to " + content[7] + '.')
-
-        if content.lower().startswith("ping"):
-            now = datetime.now()
-            sent = await message.channel.send("Measuring ping...")
-            diff = sent.created_at - now
-            await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
-
-        elif content.lower().startswith(("help", "page")):
-            await help.show_help(message, client, ownerID)
-
-        elif content.lower().startswith(("img ", "i ", "im ")):
-            await imagesearch.google_search(message)
-
-        elif content.lower().startswith("r34"):
-            await imagesearch.r34_search(message)
-
-        elif content.lower().startswith("invite"):
-            await message.channel.send(
-                "https://discord.com/api/oauth2/authorize?client_id=701021789664575498&permissions=272384&scope=bot")
-
-        elif content.lower().startswith(("pb", "picturebook", "photobook")):
-            if ' ' not in content:
-                await save.get_saved(message)
-
-            else:
-                arg = content.split(' ')[1].lower()  # the first argument
-
-                if arg == 'add' or arg == 'save':
-                    await save.save(message)
-
-                elif arg == 'remove' or arg == "delete" or arg == "rm":
-                    await save.remove(message, ownerID)
-
-        elif content.lower().startswith(("tag", "t ")):
-            if ' ' not in message.clean_content:
-                await tags.syntax_error(message)
-            else:
-                arg = content.split(' ')[1].lower()  # the first argument
-
-                if arg == 'add':
-                    await tags.add(message)
-
-                elif arg == 'remove' or arg == "delete":
-                    await tags.remove(message, ownerID)
-
-                elif arg == 'edit':
-                    await tags.edit(message, ownerID)
-
-                elif arg == 'owner':
-                    args = message.clean_content.split(' ')
-                    owner_id = tags.owner(message)
-                    tag_owner = await client.fetch_user(owner_id)
-                    if tag_owner == 0:
-                        await message.channel.send("Tag **" + args[2] + "** does not exist")
-                    else:
-                        await message.channel.send("Tag **" + args[2] + "** is owned by `" + str(tag_owner) + "`")
-
-                elif arg == 'list':
-                    await tags.owned(message)
-
-                elif arg == 'random':
-                    await tags.get_random(message)
-
-                else:
-                    await tags.get(message)
-
-        elif content.lower().startswith("metar"):
-            await metar.metar(message, avwxKey)
-
-        elif content.lower().startswith(("holding", "hold")):
-            await imagefun.holding_imagemaker(message)
-
-        elif content.lower().startswith(("exm", "exmilitary")):
-            await imagefun.exmilitary_imagemaker(message)
-
-        elif content.lower().startswith(("fantano", "fan", "review", "tnd")):
-            await imagefun.fantano_imagemaker(message)
-
-        elif content.lower().startswith(("1bit", "one", "1bit\n", "one\n", "1", "1\n")):
-            await imagefun.one_imagemaker(message)
-
-        elif content.lower().startswith("kim"):
-            await imagefun.kim_imagemaker(message)
-
-        elif content.lower().startswith(("e ", "emote")):
-            await imagefun.get_emoji(message, client)
-
-        elif content.lower().startswith(("sort", "pixelsort", "sortpixels")):
-            await imagefun.sort_pixels(message)
-
-        elif content.lower().startswith(("shuffle", "pixelshuffle")):
-            await imagefun.pixel_shuffle(message)
-
-        elif content.lower().startswith(("resize", "scale")):
-            await imagefun.resize_img(message)
-
-        elif content.lower().startswith("size"):
-            await imagefun.get_size(message)
-
-        elif content.lower().startswith(("twice", "mina")):
-            await imagefun.twice_imagemaker(message)
-
-        elif content.lower().startswith(("draw", "drawing")):
-            await imagefun.drawing_imagemaker(message)
-
-        elif content.lower().startswith("undo"):
-            await imagefun.undo_img(message)
-
-        elif content.lower().startswith(("heejin", "loona")):
-            await imagefun.heejin_imagemaker(message)
-
-        elif content.lower().startswith("school"):
-            await imagefun.school_imagemaker(message)
-
-        elif content.lower().startswith(("lecture", "lect")):
-            await imagefun.lecture_imagemaker(message)
-
-        elif content.lower().startswith("tesla"):
-            await imagefun.tesla_imagemaker(message)
-
-        elif content.lower().startswith("osu"):
-            await imagefun.osu_imagemaker(message)
-
-        elif content.lower().startswith(("color", "colour", "c ")):
-            await imagefun.get_colour_from_hex(message)
-
-        elif content.lower().startswith(("mix", "noisy")):
-            await imagefun.mixer(message)
-
-        elif content.lower().startswith("noise"):
-            await imagefun.noise_imagemaker(message)
-
-        elif content.lower().startswith(("mokou", "gf")):
-            await imagefun.mokou_imagemaker(message)
-
-        elif content.lower().startswith(("shift")):
-            await imagefun.image_shift(message)
-
-        elif content.lower().startswith(("megumin", "megu")):
-            await imagefun.megumin_imagemaker(message)
-
-        elif content.lower().startswith(("weezer")):
-            await imagefun.weezer_imagemaker(message)
-
-        elif content.lower().startswith(("game", "g ")):
-            await games.game(message, client)
-
-        elif content.lower().startswith(("rgb", "torgb", "2rgb")):
-            await imagefun.to_rgb(message)
-
-        elif content.lower().startswith(("a", "avatar")):
-            await imagefun.get_avatar(message)
-
-        elif content.lower().startswith(("purple")):
-            await imagefun.purple(message)
-
-        elif content.lower().startswith(("whatifitwaspurple")):
-            await imagefun.whatifitwaspurple(message)
-
-        elif content.lower().startswith(("tom", "tomscott")):
-            await imagefun.tom_imagemaker(message)
-
-        elif content.lower().startswith(("shuck")):
-            await imagefun.shuckle_imagemaker(message)
-
-        elif content.lower().startswith(("hirtsifier")):
-            hirt = re.sub('b|m|n|\,|\.|\<|\>', '', content)
-            await message.channel.send(hirt[10:])
-
-    elif message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
+    await bot.process_commands(message)
+    if message.clean_content.lower() == "b" or message.clean_content.lower() == "n":
         await imagesearch.advance(message)
 
     elif message.clean_content.lower().startswith("p"):
@@ -215,13 +271,8 @@ async def on_message(message):
     elif message.clean_content.lower() == "s":
         await imagesearch.stop(message)
 
-    elif message.clean_content.lower() == "based":
-        await message.channel.send("certified based")
-
-    elif message.clean_content.startswith("@" + message.guild.get_member(client.user.id).display_name):
+    elif message.clean_content.startswith("@" + message.guild.get_member(bot.user.id).display_name):
         await message.channel.send(
-            cleverbot.cleverbot_message(message, message.guild.get_member(client.user.id).display_name))
-    
+            cleverbot.cleverbot_message(message, message.guild.get_member(bot.user.id).display_name))
 
-
-client.run(clientKey)
+bot.run(params["token"])
