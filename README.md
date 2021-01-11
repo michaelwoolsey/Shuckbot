@@ -36,6 +36,6 @@ For help on a specific command do `;help <command>`
 
 There are many more commands for you to explore!
 
-Ask either `@_michaeL#9999` or `@billofbong#1612` for an invite to the bot!
+Ask either `@_michaeL#9999` or `@billofbong#12021` for an invite to the bot!
 
-_this bot is in really rough development, so let us know if you find an issue or have an idea!_
+_this bot is in really rough development, so please feel free to submit pull requests or issues!_
