@@ -80,9 +80,9 @@ async def tag(ctx, *args):
             owner_id = tags.owner(ctx.message)
             tag_owner = await bot.fetch_user(owner_id)
             if tag_owner == 0:
-                await ctx.message.channel.send("Tag **" + args[2] + "** does not exist")
+                await ctx.message.channel.send("Tag **" + args[1] + "** does not exist")
             else:
-                await ctx.message.channel.send("Tag **" + args[2] + "** is owned by `" + str(tag_owner) + "`")
+                await ctx.message.channel.send("Tag **" + args[1] + "** is owned by `" + str(tag_owner) + "`")
 
         elif args[0] == 'list':
             await tags.owned(ctx.message)
