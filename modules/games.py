@@ -9,7 +9,7 @@ from colormath.color_diff import delta_e_cmc
 import asyncio
 import requests
 from io import BytesIO
-from . import flags
+import json
 
 async def game(message, client):
     try:
@@ -215,7 +215,10 @@ def calculate_score(r, g, b, ar, ag, ab):
 async def flag_guesser(message, client, difficulty=0):
     lengths = [0, 0, 0, 0, 0]
     type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
-    for c in flags.flaglist.flags:
+    with open('modules/flags.json') as f:
+        flags = json.load(f)
+    print(flags[1])
+    for c in flags:
         lengths[c["difficulty"]-1] += 1
     # print(lengths)
     min_index = 0
@@ -236,7 +239,7 @@ async def flag_guesser(message, client, difficulty=0):
         min_index = lengths[0] + lengths[1] + lengths[2] + 1
         max_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4]
     elif difficulty == 6:
-        max_index = len(flags.flaglist.flags)
+        max_index = len(flags)
     else:
         max_index = lengths[0] + lengths[1] + lengths[2]
 
@@ -248,8 +251,8 @@ async def flag_guesser(message, client, difficulty=0):
     # except IndexError:
     #     country_index = 0
     # country_index = 30
-
-    response = requests.get(flags.flaglist.flags[country_index]["url"])
+    current_flag = flags[country_index]
+    response = requests.get(current_flag["url"])
     flag_img = Image.open(BytesIO(response.content))
     flag_img.save("flag.png")
 
@@ -262,22 +265,22 @@ async def flag_guesser(message, client, difficulty=0):
     # await message.channel.send("You have " + str(game_time) + " seconds to guess the flag!", file=discord.File("flag.png"))
 
     def check(m):
-        if type(flags.flaglist.flags[country_index]["name"]) is tuple:
-            for n in flags.flaglist.flags[country_index]["name"]:
+        if type(current_flag["name"]) is list:
+            for n in current_flag["name"]:
                 if n.lower() == m.content.lower() and m.channel == message.channel:
                     return True
             return False
-        return m.channel == message.channel and (m.content.lower() == flags.flaglist.flags[country_index]["name"].lower())
+        return m.channel == message.channel and (m.content.lower() == current_flag["name"].lower())
 
     try:
         msg = await client.wait_for('message', check=check, timeout=game_time)
     except asyncio.TimeoutError:
         try:
-            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + flags.flaglist.flags[country_index]["name"])
+            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + current_flag["name"])
         except TypeError:
-            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + flags.flaglist.flags[country_index]["name"][0])
+            await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + current_flag["name"][0])
         return
     try:
-        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + flags.flaglist.flags[country_index]['name'])
+        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + current_flag['name'])
     except TypeError:
-        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + flags.flaglist.flags[country_index]['name'][0])
+        await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + current_flag['name'][0])
