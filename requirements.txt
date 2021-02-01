@@ -3,8 +3,8 @@ requests==2.23.0
 cairosvg==2.5.1
 google_api_python_client==1.8.3
 numpy==1.18.4
-Pillow==8.0.1
-simplejson==3.17.2
+Pillow==7.1.2
+simplejson==3.17.0
 tinydb==4.1.1
 untangle==1.1.1
 cleverbot==2.0.0
