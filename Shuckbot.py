@@ -80,7 +80,7 @@ async def pb(ctx, *args):
         await picturebook.get_saved(ctx.message)
 
     else:
-        _arg = ctx.args[0]  # the first argument
+        _arg = args[0]  # the first argument
 
         if _arg == 'add' or _arg == 'save':
             await picturebook.save(ctx.message)
