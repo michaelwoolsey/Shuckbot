@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from tinydb import TinyDB, Query
 
 import discord
 from discord.ext import commands
@@ -13,15 +14,41 @@ logging.basicConfig(level=logging.INFO)
 
 defaultPrefix = ';'
 
+prefixDB = TinyDB('prefixes.json')
 
-bot = commands.Bot(command_prefix=';', intents=discord.Intents.default())
+
+def process_prefix(p_bot, message):
+    if message.guild is None:
+        return ';'
+    result = prefixDB.search(Query().id == message.guild.id)
+    if not result:
+        prefixDB.insert({'id': message.guild.id, 'prefix': ';'})
+        return ';'
+    else:
+        return result[0]['prefix']
+
+
+bot = commands.Bot(command_prefix=process_prefix, intents=discord.Intents.default())
 bot.remove_command("help")  # discord.py ships with a default help command: must remove it
+
+
+@bot.command(aliases=["shuckbotprefix", "shuckprefix"])
+async def prefix(ctx, *args):
+    if not ctx.message.author.guild_permissions.manage_guild or not ctx.message.author.guild_permissions.administrator:
+        await ctx.channel.send("You need the **Manage Server** permission to do that.")
+    elif len(args) > 1 or len(args) == 0 or len(args[0]) > 1:
+        await ctx.channel.send("**Format**: ;prefix <single character>")
+    elif not args[0].isascii():
+        await ctx.channel.send("You must choose an ASCII character!")
+    else:
+        prefixDB.update({'prefix': args[0]}, Query().id == ctx.message.guild.id)
+        await ctx.channel.send("Set server prefix to \"" + args[0] + "\".")
 
 
 @bot.command()
 async def ping(ctx):
     now = datetime.now()
-    sent = await ctx.message.channel.send("Measuring ping...")
+    sent = await ctx.channel.send("Measuring ping...")
     diff = sent.created_at - now
     await sent.edit(content="Pong! Shuckbot's ping is **" + str(int(diff.microseconds / 1000)) + "**ms.")
 
@@ -43,17 +70,17 @@ async def r34(ctx):
 
 @bot.command()
 async def invite(ctx):
-    await ctx.message.channel.send(
+    await ctx.channel.send(
         params["url"])
 
 
 @bot.command(aliases=["picturebook", "photobook"])
-async def pb(ctx):
+async def pb(ctx, *args):
     if ' ' not in ctx.message:
         await picturebook.get_saved(ctx.message)
 
     else:
-        _arg = ctx.message.split(' ')[1].lower()  # the first argument
+        _arg = args[0]  # the first argument
 
         if _arg == 'add' or _arg == 'save':
             await picturebook.save(ctx.message)
@@ -80,9 +107,9 @@ async def tag(ctx, *args):
             owner_id = tags.owner(ctx.message)
             tag_owner = await bot.fetch_user(owner_id)
             if tag_owner == 0:
-                await ctx.message.channel.send("Tag **" + args[1] + "** does not exist")
+                await ctx.channel.send("Tag **" + args[1] + "** does not exist")
             else:
-                await ctx.message.channel.send("Tag **" + args[1] + "** is owned by `" + str(tag_owner) + "`")
+                await ctx.channel.send("Tag **" + args[1] + "** is owned by `" + str(tag_owner) + "`")
 
         elif args[0] == 'list':
             await tags.owned(ctx.message)
