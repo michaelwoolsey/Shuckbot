@@ -1,5 +1,5 @@
 import discord
-from PIL import Image, ImageChops, ImageColor
+from PIL import Image, ImageColor
 import numpy as np
 import random
 import time
@@ -10,6 +10,8 @@ import asyncio
 import requests
 from io import BytesIO
 import json
+
+
 
 async def game(message, client):
     try:
@@ -48,10 +50,16 @@ async def game(message, client):
             await flag_guesser(message, client)
 
 
-async def colour_guesser(message, client, _letter=""):
+async def colour_guesser(message, client, multiplayer, _letter="", game_time=15, aliases=["colour", "color", "col", "c"]):
+    if multiplayer in ("m", "mp", "multi", "multiplayer"):
+        multiplayer = True
+
+    if multiplayer == True and game_time > 60:
+        game_time = 60
+    
     size = 150
     mention = message.author.mention
-    col = hex(random.getrandbits(24))[2:]
+    col = hex(random.getrandbits(24))[2:] #color hex
     while len(col) < 6:
         col = '0' + col
         print(col)
@@ -62,76 +70,17 @@ async def colour_guesser(message, client, _letter=""):
         await message.channel.send("Value Error has been thrown!")
         return
     else:
-        img.save("colourguess.png")
-        await message.channel.send(mention + ", here is your colo" + _letter + "r! Try to guess its hex code!",
-                                   file=discord.File("colourguess.png"))
+        if multiplayer == True:
+            msg = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
+                "\nYou have " + str(game_time) + " seconds...",
+                file=discord.File("colourguess.png"))
+        else:
+            img.save("colourguess.png")
+            await message.channel.send(mention + ", here is your colo" + _letter + "r! Try to guess its hex code!",
+                file=discord.File("colourguess.png"))
 
     def check(m):
         return m.author == message.author and m.channel == message.channel
-
-    t = time.time()
-    msg = await client.wait_for('message', check=check)
-    new_time = time.time()
-    msg_content = msg.content
-
-    if msg_content[0] == '#':
-        msg_content = msg_content[1:]
-
-    def is_hex(s):
-        try:
-            int(s, 16)
-            return True
-        except ValueError:
-            return False
-
-    if len(msg_content) != 6 or not is_hex(msg_content):
-        await message.channel.send(
-            "Sorry, your answer was not formatted correctly! Your answer should just be the 6 digit "
-            "hexadecimal code for your guess, and nothing else! The actual colo" + _letter + "r was "
-            + col + " !")
-        return
-
-    r = int(msg_content[0:2], 16)
-    g = int(msg_content[2:4], 16)
-    b = int(msg_content[4:6], 16)
-
-    ar = int(col[0:2], 16)
-    ag = int(col[2:4], 16)
-    ab = int(col[4:6], 16)
-
-    score = calculate_score(r, g, b, ar, ag, ab)
-    letter = "s"
-    if score == 1:
-        letter = ''
-
-    img.paste(Image.new("RGB", (size // 2, size), ImageColor.getcolor(('#' + msg_content), "RGB")),
-              (size // 2, 0))
-    img.save("clrguessresult.png")
-
-    await message.channel.send("The actual colo" + _letter + "r was " + col + "!\n" + mention + " got " +
-                               str(int(score)) + "/100 point" + letter + "\n"
-                                                                         "You took %.1f seconds to guess!"
-                               % (new_time - t), file=discord.File("clrguessresult.png"))
-
-
-async def colour_guesser_multi(message, client, _letter="", game_time=15):
-    if game_time > 60:
-        game_time = 60
-    size = 150
-    col = hex(random.getrandbits(24))[2:]
-    while len(col) < 6:
-        col = '0' + col
-        print(col)
-    try:
-        img = Image.new("RGB", (size, size), ImageColor.getcolor(('#' + col), "RGB"))
-    except ValueError:
-        await message.channel.send("Value Error has been thrown!")
-        return
-    else:
-        img.save("colourguess.png")
-        msg = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
-                                                                         "\nYou have " + str(game_time) + " seconds...",
-                                         file=discord.File("colourguess.png"))
 
     def is_valid_hex(s):
         try:
@@ -140,57 +89,97 @@ async def colour_guesser_multi(message, client, _letter="", game_time=15):
         except ValueError:
             return False
 
-    await asyncio.sleep(game_time)
-    msgs = message.channel.history(limit=50)
-    guess_msgs = []
-    users = []
-    final_guesses = []
-    winner = [0, "", -1]
-    async for x in msgs:
-        if x.id == msg.id:
-            break
-        if is_valid_hex(x.clean_content):
-            guess_msgs.append(x)
-
-    for x in guess_msgs:
-        if x.author.id in users:
-            continue
-        final_guesses.append([x.author.id, x.clean_content])
-        users.append(x.author.id)
-
     ar = int(col[0:2], 16)
     ag = int(col[2:4], 16)
     ab = int(col[4:6], 16)
 
-    for x in range(0, len(final_guesses)):
-        rs = final_guesses[x][1][0:2]
-        gs = final_guesses[x][1][2:4]
-        bs = final_guesses[x][1][4:6]
-        r = int(rs, 16)
-        g = int(gs, 16)
-        b = int(bs, 16)
-        score = calculate_score(r, g, b, ar, ag, ab)
-        final_guesses[x] = [final_guesses[x][0], final_guesses[x][1], score]
-        if score > winner[2]:
-            winner = final_guesses[x]
+    if multiplayer == True:
+        await asyncio.sleep(game_time)
+        msg_multi = message.channel.history(limit=50)
+        guess_msgs = []
+        users = []
+        final_guesses = []
+        winner = [0, "", -1]
+ 
+        async for x in msg_multi:
+            if x.id == msg.id:
+                break
+            if is_valid_hex(x.clean_content):
+                guess_msgs.append(x)
 
-    if not final_guesses:
-        await message.channel.send("Time out! Nobody guessed!")
-    else:
-        final_guesses.sort(key=lambda y: y[2], reverse=True)
-        guesses = len(final_guesses)
-        for x in range(0, guesses):
-            img.paste(Image.new("RGB", (size // 2, size), ImageColor.getcolor(('#' + final_guesses[x][1]), "RGB")),
-                      (size // 2, x * size // guesses))
-        img.save("clrguessresult.png")
-        await message.channel.send(
-            "The actual colo" + _letter + "r was " + col + "!\n" + client.get_user(int(winner[0])).mention
-            + " got " + str(int(np.ceil(winner[2]))) + "/100 points\n", file=discord.File("clrguessresult.png"))
-        to_send = ""
+        for x in guess_msgs:
+            if x.author.id in users:
+                continue
+            final_guesses.append([x.author.id, x.clean_content])
+            users.append(x.author.id)
+
         for x in range(0, len(final_guesses)):
-            to_send += str(x + 1) + ". " + client.get_user(final_guesses[x][0]).mention + ": " + \
-                       str(int(np.ceil(final_guesses[x][2]))) + "/100 points (#" + final_guesses[x][1] + ")\n"
-        await message.channel.send(to_send)
+            rs = final_guesses[x][1][0:2]
+            gs = final_guesses[x][1][2:4]
+            bs = final_guesses[x][1][4:6]
+ 
+            r = int(rs, 16)
+            g = int(gs, 16)
+            b = int(bs, 16)
+    
+            score = calculate_score(r, g, b, ar, ag, ab)
+            final_guesses[x] = [final_guesses[x][0], final_guesses[x][1], score]
+            if score > winner[2]:
+                winner = final_guesses[x]
+ 
+        if not final_guesses:
+            await message.channel.send("Time out! Nobody guessed!")
+        else:
+            final_guesses.sort(key=lambda y: y[2], reverse=True)
+            guesses = len(final_guesses)
+    
+            for x in range(0, guesses):
+                img.paste(Image.new("RGB", (size // 2, size), ImageColor.getcolor(('#' + final_guesses[x][1]), "RGB")),
+                        (size // 2, x * size // guesses))
+            img.save("clrguessresult.png")
+   
+            await message.channel.send(
+                "The actual colo" + _letter + "r was " + col + "!\n" + client.get_user(int(winner[0])).mention
+                + " got " + str(int(np.ceil(winner[2]))) + "/100 points\n", file=discord.File("clrguessresult.png"))
+            to_send = ""
+   
+            for x in range(0, len(final_guesses)):
+                to_send += str(x + 1) + ". " + client.get_user(final_guesses[x][0]).mention + ": " + \
+                        str(int(np.ceil(final_guesses[x][2]))) + "/100 points (#" + final_guesses[x][1] + ")\n"
+            await message.channel.send(to_send)
+
+    else:
+        t = time.time()
+        msg_single = await client.wait_for('message', check=check)
+        new_time = time.time()
+        msg_content = msg.content
+        if is_valid_hex(msg_content) == False:
+            await message.channel.send(
+                "Sorry, your answer was not formatted correctly! Your answer should just be the 6 digit "
+                "hexadecimal code for your guess, and nothing else! The actual colo" + _letter + "r was "
+                + col + " !")
+            return
+    
+        r = int(msg_content[0:2], 16)
+        g = int(msg_content[2:4], 16)
+        b = int(msg_content[4:6], 16)
+        score = calculate_score(r, g, b, ar, ag, ab)
+        letter = "s"
+  
+        if score == 1:
+            letter = ''
+
+        if msg_content[0] == '#':
+            msg_content = msg_content[1:]
+
+        img.paste(Image.new("RGB", (size // 2, size), ImageColor.getcolor(('#' + msg_content), "RGB")),
+                (size // 2, 0))
+        img.save("clrguessresult.png")
+
+        await message.channel.send("The actual colo" + _letter + "r was " + col + "!\n" + mention + " got " +
+                                str(int(score)) + "/100 point" + letter + "\n"
+                                                                            "You took %.1f seconds to guess!"
+                                % (new_time - t), file=discord.File("clrguessresult.png"))
 
 
 def rgb_to_lab(r, g, b):
@@ -212,9 +201,12 @@ def calculate_score(r, g, b, ar, ag, ab):
     return res if res > 0 else 0
 
 
-async def flag_guesser(message, client, difficulty=0):
+async def flag_guesser(message, client, difficulty=0, aliases=["flag", "flags", "f"]):
     lengths = [0, 0, 0, 0, 0]
     type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
+
+    #Flag format:
+    #{"name": ["Country"], "difficulty": #, "url": "https://cdn.countryflags.com/...png"}
     with open('modules/flags.json') as f:
         flags = json.load(f)
     print(flags[1])
@@ -228,7 +220,7 @@ async def flag_guesser(message, client, difficulty=0):
         max_index = lengths[0]
     elif difficulty == 2:
         min_index = lengths[0] + 1
-        max_index = lengths[0] + lengths[1]
+        max_index = lengths[0,] + lengths[1]
     elif difficulty == 3:
         min_index = lengths[0] + lengths[1] + 1
         max_index = lengths[0] + lengths[1] + lengths[2]

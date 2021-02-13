@@ -252,8 +252,9 @@ async def weezer(ctx):
 
 
 @bot.command(aliases=["g"])
-async def game(ctx):
-    await games.game(ctx.message, bot)
+async def game(ctx, gtype, *args):
+    game = games + "." + gtype
+    game(message=ctx, client=bot, *args)
 
 
 @bot.command(aliases=["torgb", "2rgb"])
