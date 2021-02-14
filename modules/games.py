@@ -32,7 +32,7 @@ async def colour_guesser(message, client, multiplayer=False, _letter="", game_ti
         return
     else:
         if multiplayer == True:
-            msg = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
+            msg_multi = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
                 "\nYou have " + str(game_time) + " seconds...",
                 file=discord.File("colourguess.png"))
         else:
