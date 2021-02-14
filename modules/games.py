@@ -181,7 +181,7 @@ async def flag_guesser(message, client, difficulty=0):
         max_index = lengths[0]
     elif difficulty == 2:
         min_index = lengths[0] + 1
-        max_index = lengths[0,] + lengths[1]
+        max_index = lengths[0] + lengths[1]
     elif difficulty == 3:
         min_index = lengths[0] + lengths[1] + 1
         max_index = lengths[0] + lengths[1] + lengths[2]
