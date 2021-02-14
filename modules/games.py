@@ -11,7 +11,7 @@ import requests
 from io import BytesIO
 import json
 
-async def colour_guesser(message, client, multiplayer, _letter="", game_time=15):
+async def colour_guesser(message, client, multiplayer=False, _letter="", game_time=15):
     if multiplayer in ("m", "mp", "multi", "multiplayer"):
         multiplayer = True
 
@@ -63,7 +63,7 @@ async def colour_guesser(message, client, multiplayer, _letter="", game_time=15)
         winner = [0, "", -1]
  
         async for x in msg_multi:
-            if x.id == msg.id:
+            if x.id == msg_multi.id:
                 break
             if is_valid_hex(x.clean_content):
                 guess_msgs.append(x)
@@ -113,7 +113,7 @@ async def colour_guesser(message, client, multiplayer, _letter="", game_time=15)
         t = time.time()
         msg_single = await client.wait_for('message', check=check)
         new_time = time.time()
-        msg_content = msg.content
+        msg_content = msg_single.content
         if is_valid_hex(msg_content) == False:
             await message.channel.send(
                 "Sorry, your answer was not formatted correctly! Your answer should just be the 6 digit "
