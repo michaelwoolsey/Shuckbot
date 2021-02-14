@@ -11,46 +11,7 @@ import requests
 from io import BytesIO
 import json
 
-
-
-async def game(message, client):
-    try:
-        args = [x.lower() for x in message.clean_content[1:].split(' ')][1:]
-    except IndexError:
-        await message.channel.send("**The list of available games are:**\n\t*;game colour* - guess the hexcode!")
-        return
-    if args[0] in ("color", "col", "c"):
-        if len(args) > 2 and args[1] in ("m", "mp", "multi", "multiplayer") and args[2].isdigit():
-            await colour_guesser_multi(message, client, game_time=int(args[2]))
-        elif len(args) > 1 and args[1] in ("m", "mp", "multi", "multiplayer"):
-            await colour_guesser_multi(message, client)
-        else:
-            await colour_guesser(message, client)
-    elif args[0] == "colour":
-        if len(args) > 1 and args[1] in ("m", "mp", "multi", "multiplayer"):
-            await colour_guesser_multi(message, client, "u")
-        else:
-            await colour_guesser(message, client, "u")
-    elif args[0] in ("flag", "flags", "f"):
-        if len(args) == 1:
-            await flag_guesser(message, client)
-        elif args[1] in ("easy", "e", "1"):
-            await flag_guesser(message, client, 1)
-        elif args[1] in ("normal", "n", "2"):
-            await flag_guesser(message, client, 2)
-        elif args[1] in ("hard", "h", "3"):
-            await flag_guesser(message, client, 3)
-        elif args[1] in ("states", "s", "4"):
-            await flag_guesser(message, client, 4)
-        elif args[1] in ("expert", "extreme", "x", "5"):
-            await flag_guesser(message, client, 5)
-        elif args[1] in ("master", "all", "m", "a", "6"):
-            await flag_guesser(message, client, 6)
-        else:
-            await flag_guesser(message, client)
-
-
-async def colour_guesser(message, client, multiplayer, _letter="", game_time=15, aliases=["colour", "color", "col", "c"]):
+async def colour_guesser(message, client, multiplayer, _letter="", game_time=15):
     if multiplayer in ("m", "mp", "multi", "multiplayer"):
         multiplayer = True
 
@@ -201,7 +162,7 @@ def calculate_score(r, g, b, ar, ag, ab):
     return res if res > 0 else 0
 
 
-async def flag_guesser(message, client, difficulty=0, aliases=["flag", "flags", "f"]):
+async def flag_guesser(message, client, difficulty=0):
     lengths = [0, 0, 0, 0, 0]
     type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
 
