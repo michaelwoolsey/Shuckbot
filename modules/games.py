@@ -1,4 +1,3 @@
-from re import U
 import discord
 from PIL import Image, ImageColor
 import numpy as np
@@ -12,16 +11,13 @@ import requests
 from io import BytesIO
 import json
 
-async def colour_guesser(message, client, multiplayer=False, game_time=15):
+async def colour_guesser(message, client, multiplayer=False, _letter="", game_time=15):
     if multiplayer in ("m", "mp", "multi", "multiplayer"):
         multiplayer = True
 
     if multiplayer == True and game_time > 60:
         game_time = 60
     
-    if message[4] == "u":
-        _letter = "u"
-
     size = 150
     mention = message.author.mention
     col = hex(random.getrandbits(24))[2:] #color hex
