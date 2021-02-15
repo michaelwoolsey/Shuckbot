@@ -5,7 +5,8 @@ from tinydb import TinyDB, Query
 import discord
 from discord.ext import commands
 
-from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, games, parameters
+from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, parameters
+from modules.games import colour_guesser, flag_guesser
 
 params = parameters.params
 
@@ -253,8 +254,8 @@ async def weezer(ctx):
 
 @bot.command(aliases=["g"])
 async def game(ctx, gtype, *args):
-    colour=color=col=c = games.colour_guesser
-    flags=flag=f = games.flag_guesser
+    colour=color=col=c = colour_guesser
+    flags=flag=f = flag_guesser
     await eval(gtype)(ctx.message, bot, *args)
 
 
