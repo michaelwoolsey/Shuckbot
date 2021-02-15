@@ -1,4 +1,3 @@
-import discord
 import requests
 from simplejson.scanner import JSONDecodeError
 
