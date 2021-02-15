@@ -1,5 +1,5 @@
 import discord
-from PIL import Image, ImageChops, ImageColor
+from PIL import Image, ImageColor
 import numpy as np
 import random
 import time
