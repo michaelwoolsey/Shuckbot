@@ -15,7 +15,7 @@ async def colour_guesser(message, client, multiplayer=False, _letter="", game_ti
     if multiplayer in ("m", "mp", "multi", "multiplayer"):
         multiplayer = True
 
-    if multiplayer == True and game_time > 60:
+    if multiplayer and game_time > 60:
         game_time = 60
     
     size = 150
@@ -31,12 +31,12 @@ async def colour_guesser(message, client, multiplayer=False, _letter="", game_ti
         await message.channel.send("Value Error has been thrown!")
         return
     else:
-        if multiplayer == True:
-            await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
+        img.save("colourguess.png")
+        if multiplayer:
+            msg = await message.channel.send("Here is your colo" + _letter + "r! Everyone try to guess its hex code!"
                 "\nYou have " + str(game_time) + " seconds...",
                 file=discord.File("colourguess.png"))
-        else:
-            img.save("colourguess.png")
+        else:            
             await message.channel.send(mention + ", here is your colo" + _letter + "r! Try to guess its hex code!",
                 file=discord.File("colourguess.png"))
 
@@ -54,16 +54,16 @@ async def colour_guesser(message, client, multiplayer=False, _letter="", game_ti
     ag = int(col[2:4], 16)
     ab = int(col[4:6], 16)
 
-    if multiplayer == True:
+    if multiplayer:
         await asyncio.sleep(game_time)
-        msg_multi = message.channel.history(limit=50)
+        msgs_multi = message.channel.history(limit=50)
         guess_msgs = []
         users = []
         final_guesses = []
         winner = [0, "", -1]
  
-        async for x in msg_multi:
-            if x.id == msg_multi.id:
+        async for x in msgs_multi:
+            if x.id == msg.id:
                 break
             if is_valid_hex(x.clean_content):
                 guess_msgs.append(x)
