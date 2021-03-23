@@ -216,7 +216,7 @@ def calculate_score(r, g, b, ar, ag, ab):
 
 async def flag_guesser(message, client, difficulty=0):
     lengths = [0 for i in range(8)]
-    type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
+    type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag", "flag", "flag", "flag"]
     with open('modules/flags.json') as f:
         flags = json.load(f)
     print(flags[1])
