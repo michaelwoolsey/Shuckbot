@@ -244,11 +244,15 @@ async def flag_guesser(message, client, difficulty=0):
         max_index = len(flags)
     elif difficulty == 7:
         min_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + 1
-        max_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + lengths[6]
+        max_index = len(flags)  # WILL HAVE TO CHANGE  lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + lengths[6]
     else:
         max_index = lengths[0] + lengths[1] + lengths[2]
 
-    country_index = random.randint(min_index, max_index)
+    try:
+        country_index = random.randint(min_index, max_index)
+    except ValueError:
+        print("uh oh! value error raised")
+        country_index = random.randint(0, len(flags))
 
     current_flag = flags[country_index]
     response = requests.get(current_flag["url"])
