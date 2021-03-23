@@ -1,5 +1,5 @@
 import discord
-from PIL import Image, ImageColor
+from PIL import Image, ImageChops, ImageColor
 import numpy as np
 import random
 import time
@@ -44,6 +44,8 @@ async def game(message, client):
             await flag_guesser(message, client, 5)
         elif args[1] in ("master", "all", "m", "a", "6"):
             await flag_guesser(message, client, 6)
+        elif args[1] in ("japan", "j", "7"):
+            await flag_guesser(message, client, 7)
         else:
             await flag_guesser(message, client)
 
@@ -213,7 +215,7 @@ def calculate_score(r, g, b, ar, ag, ab):
 
 
 async def flag_guesser(message, client, difficulty=0):
-    lengths = [0, 0, 0, 0, 0]
+    lengths = [0 for i in range(8)]
     type_f = ["country", "country", "country", "country", "state", "flag", "flag"]
     with open('modules/flags.json') as f:
         flags = json.load(f)
@@ -240,17 +242,14 @@ async def flag_guesser(message, client, difficulty=0):
         max_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4]
     elif difficulty == 6:
         max_index = len(flags)
+    elif difficulty == 7:
+        min_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + 1
+        max_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + lengths[6]
     else:
         max_index = lengths[0] + lengths[1] + lengths[2]
 
     country_index = random.randint(min_index, max_index)
 
-    # try:
-    #     if flags[country_index]["name"] == "Israel" and message.channel.guild == 522565286168363009:
-    #         country_index = 0
-    # except IndexError:
-    #     country_index = 0
-    # country_index = 30
     current_flag = flags[country_index]
     response = requests.get(current_flag["url"])
     flag_img = Image.open(BytesIO(response.content))
