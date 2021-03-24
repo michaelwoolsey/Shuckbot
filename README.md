@@ -1,5 +1,5 @@
 # Shuckbot
-A discord bot for some basic commands and image manipulation.
+A discord bot for some basic commands,image manipulation, and games!
 
 Collaboration with @billofbong
 
