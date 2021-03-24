@@ -10,7 +10,8 @@ import asyncio
 import requests
 from io import BytesIO
 import json
-from typing import List, Tuple, Optional
+from typing import Optional, List, Any
+
 
 async def game(message, client):
     try:
@@ -33,26 +34,64 @@ async def game(message, client):
     elif args[0] in ("flag", "flags", "f"):
         if len(args) == 1:
             await flag_guesser(message, client)
-        elif args[1] in ("easy", "e", "1"):
-            await flag_guesser(message, client, 1)
-        elif args[1] in ("normal", "n", "2"):
-            await flag_guesser(message, client, 2)
-        elif args[1] in ("hard", "h", "3"):
-            await flag_guesser(message, client, 3)
-        elif args[1] in ("states", "s", "4"):
-            await flag_guesser(message, client, 4)
-        elif args[1] in ("expert", "extreme", "x", "5"):
-            await flag_guesser(message, client, 5)
-        elif args[1] in ("master", "all", "m", "a", "6"):
-            await flag_guesser(message, client, 6)
-        elif args[1] in ("japan", "j", "7"):
-            await flag_guesser(message, client, 7)
+        elif list_contains(['m', 'multi', 'multiplayer'], args):
+            diffs_ = []
+            for arg in args[1:]:
+                diffs_.append(get_diff_from_arg(arg))
+            diff = max(0, *diffs_)  # if no difficulty inputted, just do diff=0
+            points_to_win = get_int_from_args(args)
+            # print(f'diff:{diff}, ptw:{points_to_win}')
+            if points_to_win != -1:  # did input round count
+                await flag_guesser_multi(message, client, difficulty=diff, points_to_win=points_to_win)
+            else:
+                await flag_guesser_multi(message, client, difficulty=diff)
         else:
-            await flag_guesser(message, client)
+            await flag_guesser(message, client, get_diff_from_arg(args[1]))
     elif args[0] in ["geography", "geo", "g"]:
         area = geo_get_area(args)
         mode = geo_get_mode(args)
         await geography_game(message, client, area, mode)
+    elif args[0] in ["stats", "s"]:
+        if message.mentions: #has mentions
+            user_mention = message.mentions[0].mention
+        else:
+            user_mention = message.author.mention
+        if list_contains(['color', 'colour', 'col', 'c'], args[1:]):
+            user_game = 'color'
+        elif list_contains(['flag', 'flags', 'f'], args[1:]):
+            user_game = 'flag'
+        elif list_contains(['geography', 'geo', 'g'], args[1:]):
+            user_game = 'geography'
+        else:
+            user_game = 'all'
+        await get_stats(message, client, user_mention, user_game)
+
+
+def get_diff_from_arg(arg: str) -> int:
+    # returns the difficulty for the flag game
+    if arg in ("easy", "e"):
+        return 1
+    elif arg in ("normal", "n"):
+        return 2
+    elif arg in ("hard", "h"):
+        return 3
+    elif arg in ("states", "s"):
+        return 4
+    elif arg in ("expert", "extreme", "x"):
+        return 5
+    elif arg in ("all", "a"):
+        return 6
+    elif arg in ("japan", "j"):
+        return 7
+    return 0
+
+
+def get_int_from_args(args) -> int:
+    # returns -1 if no ints found
+    for arg in args:
+        if arg.isdigit():
+            return int(arg)
+    return -1
 
 
 def geo_get_area(args) -> str:
@@ -72,6 +111,18 @@ def list_contains(l1, l2) -> bool:
         if i.lower() in l2:
             return True
     return False
+
+
+def list_contains_return(l1, l2) -> Optional[Any]:
+    for i in l1:
+        if i.lower() in l2:
+            return i
+
+
+async def username_from_mention(mention, client) -> str:
+    name = str(mention)[2:-1].replace("!", "")
+    name = await client.fetch_user(int(name))
+    return str(name)
 
 
 async def colour_guesser(message, client, _letter=""):
@@ -238,17 +289,15 @@ def calculate_score(r, g, b, ar, ag, ab):
     return res if res > 0 else 0
 
 
-async def flag_guesser(message, client, difficulty=0):
+def get_flag(message, difficulty):
     lengths = [0 for _ in range(8)]
-    type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag", "flag", "flag", "flag"]
     with open('modules/flags.json') as f:
         flags = json.load(f)
     # print(flags[1])
     for c in flags:
-        lengths[c["difficulty"]-1] += 1
+        lengths[c["difficulty"] - 1] += 1
     # print(lengths)
     min_index = 0
-    game_time = 15
 
     if difficulty == 1:
         max_index = lengths[0]
@@ -268,20 +317,38 @@ async def flag_guesser(message, client, difficulty=0):
         max_index = len(flags)
     elif difficulty == 7:
         min_index = lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + 1
-        max_index = len(flags)  # WILL HAVE TO CHANGE  lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + lengths[6]
+        max_index = len(
+            flags)  # WILL HAVE TO CHANGE  lengths[0] + lengths[1] + lengths[2] + lengths[3] + lengths[4] + lengths[6]
     else:
         max_index = lengths[0] + lengths[1] + lengths[2]
 
     try:
-        country_index = random.randint(min_index, max_index)
+        country_index = random.randint(min_index, max_index - 1)
     except ValueError:
-        print(f"uh oh! value error raised: {min_index, max_index, len(flags), lengths}")
+        print(f"uh oh! value error raised: {min_index, max_index - 1, len(flags), lengths}")
         country_index = random.randint(0, len(flags))
 
-    current_flag = flags[country_index]
-    response = requests.get(current_flag["url"])
-    flag_img = Image.open(BytesIO(response.content))
-    flag_img.save("flag.png")
+    try:
+        current_flag = flags[country_index]
+        response = requests.get(current_flag["url"])
+        flag_img = Image.open(BytesIO(response.content))
+        flag_img.save("flag.png")
+    except:
+        print(country_index)
+        return
+
+    return current_flag
+
+
+async def flag_guesser(message, client, difficulty=0, game_time=15):
+    type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag", "flag", "flag", "flag"]
+
+    current_flag = get_flag(message, difficulty)
+    if current_flag is None:
+        await message.channel.send('Sorry, something went wrong! Please try again')
+        return
+
+    # print(current_flag)
 
     embed = discord.Embed(title="You have " + str(game_time) + " seconds to guess the " + type_f[difficulty] + "!")
     embed.colour = discord.Color.gold()
@@ -317,8 +384,89 @@ async def flag_guesser(message, client, difficulty=0):
         await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + current_flag['name'][0])
 
     if temp != 0:
-
         increment_user(msg.author.mention, "flag", difficulty_=difficulty, flag=current_flag["name"], total=1)
+
+
+async def flag_guesser_multi(message, client, difficulty=0, points_to_win=5, game_time=15):
+    msg1 = await message.channel.send(f'Get ready to guess the flag! The first person to correctly guess {points_to_win} flags wins!')
+    type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag",
+              "flag", "flag", "flag"]
+
+    current_flag = None
+    sent_embed = None
+    user_points = {}
+    losses_in_a_row = 0
+
+    def check(m):
+        if type(current_flag["name"]) is list:
+            for n in current_flag["name"]:
+                if n.lower() == m.content.lower() and m.channel == message.channel:
+                    return True
+            return False
+        return m.channel == message.channel and (m.content.lower() == current_flag["name"].lower())
+
+    rounds_played = 1
+    while True:
+        current_flag = get_flag(message, difficulty)
+        if current_flag is None:
+            await message.channel.send('Sorry, something went wrong! Please try again')
+            return
+
+        if sent_embed is not None:
+            sent_embed.delete()
+
+        # await message.channel.send(f'Sorry, something went wrong! Please try again')
+
+        embed = discord.Embed(title=f"You have {game_time} seconds to guess the {type_f[difficulty]}!")
+        embed.set_footer(text=f"Round {rounds_played}, First to {points_to_win} wins!")
+        embed.colour = discord.Color.gold()
+        embed.type = "rich"
+        embed.set_image(url="attachment://flag.png")
+        sent_embed = await message.channel.send(embed=embed, file=discord.File("flag.png"))
+
+        temp = 0
+
+        try:
+            msg = await client.wait_for('message', check=check, timeout=game_time)
+            temp = 1
+            losses_in_a_row = 0
+            await message.channel.send(
+                f"Good job {msg.author.mention}! The {type_f[difficulty]} was {current_flag['name'][0]}")
+
+        except asyncio.TimeoutError:
+            await message.channel.send(
+                f"Sorry, nobody got the {type_f[difficulty]} correct! The correct answer was: {current_flag['name'][0]}")
+            losses_in_a_row += 1
+            if losses_in_a_row == 3:
+                await message.channel.send("If nobody gets this next one correct, the game will end!")
+            if losses_in_a_row > 3:
+                await message.channel.send("Game over! Nobody wins :(")
+                return
+
+        if temp != 0:  # somebody won
+            increment_user(msg.author.mention, "flag", difficulty_=difficulty, flag=current_flag["name"], total=1, rounds_won=1)
+            if msg.author.mention not in user_points:
+                user_points[msg.author.mention] = 1
+            else:
+                user_points[msg.author.mention] += 1
+                if user_points[msg.author.mention] >= points_to_win:
+                    await message.channel.send(f'Congratulations {msg.author.mention}! You are our winner!')
+                    increment_user(msg.author.mention, "flag", games_won=1)
+                    temp = -1
+
+        embed2 = discord.Embed(title=f"Scoreboard!")
+        for player, points in sorted(user_points.items(), key=lambda item: item[1], reverse=True):
+            name = await username_from_mention(player, client)
+            embed2.add_field(name=name, value=points, inline=False)
+        embed2.colour = discord.Color.blurple()
+        embed2.type = "rich"
+        sent_embed2 = await message.channel.send(embed=embed2)
+        if temp == -1:  # game over
+            return
+
+        rounds_played += 1
+
+
 
 async def geography_game(message, client, area="japan", mode="map", game_time=15):
     if area == "":
@@ -369,6 +517,55 @@ async def geography_map(message, client, area, mode, geo, game_time):
         await message.channel.send(f"Sorry, nobody got the prefecture correct! The correct answer was: {pref['name'][0]}")
 
 
+async def get_stats(message, client, user_mention, user_game):
+    with open('modules/scores.json') as f:
+        db = json.load(f)
+
+    user_name = await username_from_mention(user_mention, client)
+    user_mention = str(user_mention).replace("!", "")
+
+    if user_game == 'color':
+        await message.channel.send(f"Sorry! There are no stats for that game yet!")
+    elif user_game == 'flag':
+        try:
+            total = db[user_mention]['flag']['total']
+        except:
+            await message.channel.send(f"{user_name[:-5]} has not played this game yet!")
+            return
+
+        embed = discord.Embed(title=f"Stats for user {user_name[:-5]} for the Flag game")
+        embed.set_footer(text=f"Stat collection started 3/23/2021")
+        embed.colour = discord.Colour.red()
+        embed.type = "rich"
+
+        embed.add_field(name=f'Flags correctly guessed:', value=f'{total}')
+
+        try:
+            embed.add_field(name=f"Rounds won in multiplayer:", value=f"{db[user_mention]['flag']['rounds_won']}")
+            embed.add_field(name=f"Games won in multiplayer:", value=f"{db[user_mention]['flag']['games_won']}")
+        except:
+            embed.add_field(name=f"Rounds won in multiplayer:", value=f"0")
+            embed.add_field(name=f"Games won in multiplayer:", value=f"0")
+
+        sent_embed = await message.channel.send(embed=embed)
+    elif user_game == 'geography':
+        pass
+    else:  # general
+        try:
+            total = db[user_mention]['flag']['total']
+        except:
+            await message.channel.send(f"{user_name[:-5]} has not played this game yet!")
+            return
+
+        embed = discord.Embed(title=f"Stats for user {user_name[:-5]}")
+        embed.set_footer(text=f"Stat collection started 3/23/2021\nFor more stats, add the name of the game to your mesage!")
+        embed.colour = discord.Colour.red()
+        embed.type = "rich"
+
+        embed.add_field(name=f'Flags correctly guessed:', value=f'{total}')
+        sent_embed = await message.channel.send(embed=embed)
+
+
 def increment_user(user_mention, game_played: str, **kwargs):
     # kwargs will contain any information important to the game
     # game_played MUST be one of 'color', 'flag', or 'geography'
@@ -376,6 +573,8 @@ def increment_user(user_mention, game_played: str, **kwargs):
     if game_played not in GAMES:
         print('u messed up mikey')
         return
+
+    user_mention = str(user_mention).replace("!", "")
 
     kwargs_combo_string = ""
     for key, value in kwargs.items():
@@ -421,10 +620,13 @@ def increment_user(user_mention, game_played: str, **kwargs):
                 else:
                     df[user_mention][game_played][key][value[0]] = 1
             elif type(value) == int:
-                df[user_mention][game_played][key] += value
+                try:
+                    df[user_mention][game_played][key] += value
+                except KeyError:
+                    df[user_mention][game_played][key] = value
             else:
                 df[user_mention][game_played][key] = value
-                print("! not int or strng")
+                print("! not int or string")
 
     with open('modules/scores.json', 'w') as f:  # likely to cause issues! race condition
         json.dump(df, f, indent=4)
