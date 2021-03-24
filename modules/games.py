@@ -10,6 +10,7 @@ import asyncio
 import requests
 from io import BytesIO
 import json
+from typing import List, Tuple, Optional
 
 async def game(message, client):
     try:
@@ -48,6 +49,29 @@ async def game(message, client):
             await flag_guesser(message, client, 7)
         else:
             await flag_guesser(message, client)
+    elif args[0] in ["geography", "geo", "g"]:
+        area = geo_get_area(args)
+        mode = geo_get_mode(args)
+        await geography_game(message, client, area, mode)
+
+
+def geo_get_area(args) -> str:
+    if list_contains(args, ['japan', 'j', 'prefectures', 'p', 'pf']):
+        return 'japan'
+    return ""
+
+
+def geo_get_mode(args) -> str:
+    if list_contains(args, ['map', 'm']):
+        return 'map'
+    return ""
+
+
+def list_contains(l1, l2) -> bool:
+    for i in l1:
+        if i.lower() in l2:
+            return True
+    return False
 
 
 async def colour_guesser(message, client, _letter=""):
@@ -215,11 +239,11 @@ def calculate_score(r, g, b, ar, ag, ab):
 
 
 async def flag_guesser(message, client, difficulty=0):
-    lengths = [0 for i in range(8)]
+    lengths = [0 for _ in range(8)]
     type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag", "flag", "flag", "flag"]
     with open('modules/flags.json') as f:
         flags = json.load(f)
-    print(flags[1])
+    # print(flags[1])
     for c in flags:
         lengths[c["difficulty"]-1] += 1
     # print(lengths)
@@ -251,7 +275,7 @@ async def flag_guesser(message, client, difficulty=0):
     try:
         country_index = random.randint(min_index, max_index)
     except ValueError:
-        print("uh oh! value error raised")
+        print(f"uh oh! value error raised: {min_index, max_index, len(flags), lengths}")
         country_index = random.randint(0, len(flags))
 
     current_flag = flags[country_index]
@@ -275,6 +299,8 @@ async def flag_guesser(message, client, difficulty=0):
             return False
         return m.channel == message.channel and (m.content.lower() == current_flag["name"].lower())
 
+    temp = 0
+
     try:
         msg = await client.wait_for('message', check=check, timeout=game_time)
     except asyncio.TimeoutError:
@@ -284,6 +310,122 @@ async def flag_guesser(message, client, difficulty=0):
             await message.channel.send("Sorry, nobody got the " + type_f[difficulty] + " correct! The correct answer was: " + current_flag["name"][0])
         return
     try:
+        temp = 1
         await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + current_flag['name'])
     except TypeError:
+        temp = 2
         await message.channel.send("Good job " + msg.author.mention + "! The " + type_f[difficulty] + " was " + current_flag['name'][0])
+
+    if temp != 0:
+
+        increment_user(msg.author.mention, "flag", difficulty_=difficulty, flag=current_flag["name"], total=1)
+
+async def geography_game(message, client, area="japan", mode="map", game_time=15):
+    if area == "":
+        print("empty area")
+        area = "japan"
+
+    if mode == "":
+        print('empty mode')
+        mode = "map"
+
+    if area == "japan":
+        with open('modules/prefectures.json') as f:
+            geo = json.load(f)
+
+    if mode == "map":
+        await geography_map(message, client, area, mode, geo, game_time)
+
+
+async def geography_map(message, client, area, mode, geo, game_time):
+    index = random.randint(0, len(geo) - 1)
+    pref = geo[index]
+    try:
+        response = requests.get(pref["map_url"])
+    except:
+        print(geo[index])
+        await message.channel.send(f"Something broke! Please try the command again")
+        return
+
+    map_img = Image.open(BytesIO(response.content))
+    map_img.save("map.png")
+
+    embed = discord.Embed(title=f"You have {str(game_time)} seconds to guess the prefecture based on the map!")
+    embed.colour = discord.Color.gold()
+    embed.type = "rich"
+
+    embed.set_image(url="attachment://map.png")
+    await message.channel.send(embed=embed, file=discord.File("map.png"))
+
+    def check(m):
+        return m.channel == message.channel and (m.content.lower() == pref["name"][0].lower())
+
+    try:
+        msg = await client.wait_for('message', check=check, timeout=game_time)
+        await message.channel.send(f"Good job {msg.author.mention}! The prefecture was {pref['name'][0]}")
+        increment_user(msg.author.mention, 'geography', area=area, mode=mode)
+
+    except asyncio.TimeoutError:
+        await message.channel.send(f"Sorry, nobody got the prefecture correct! The correct answer was: {pref['name'][0]}")
+
+
+def increment_user(user_mention, game_played: str, **kwargs):
+    # kwargs will contain any information important to the game
+    # game_played MUST be one of 'color', 'flag', or 'geography'
+    GAMES = ['color', 'flag', 'geography']
+    if game_played not in GAMES:
+        print('u messed up mikey')
+        return
+
+    kwargs_combo_string = ""
+    for key, value in kwargs.items():
+        kwargs_combo_string += str(value) + '_'
+
+    with open('modules/scores.json') as f:
+        df = json.load(f)
+
+    if user_mention not in df:  # user does not exist in the file
+        df[user_mention] = {}
+        for game__ in GAMES:
+            df[user_mention][game__] = {}
+
+    if df[user_mention][game_played] == {}:  # uninitialized
+        for key, value in kwargs.items():
+            # print(key, value)
+            if key[-1] == '_':
+                df[user_mention][game_played][key+str(value)] = 1
+            elif type(value) == str:
+                df[user_mention][game_played][key] = {value: 1, kwargs_combo_string: 1}
+            elif isinstance(value, list):
+                df[user_mention][game_played][key] = {value[0]: 1}
+            else:
+                df[user_mention][game_played][key] = value
+
+    else:  # game played before
+        # print(1)
+        for key, value in kwargs.items():
+            if key[-1] == '_':
+                try:
+                    df[user_mention][game_played][key + str(value)] += 1
+                except KeyError:
+                    df[user_mention][game_played][key + str(value)] = 1
+            elif type(value) == str:
+                # print(key, value)
+                # print(f'{df[user_mention]},\n{df[user_mention][game_played]}, \n{df[user_mention][game_played][key]}')
+                df[user_mention][game_played][key][value] += 1
+                df[user_mention][game_played][key][kwargs_combo_string] += 1
+            elif isinstance(value, list):
+                # print(df[user_mention][game_played], key, value)
+                if value[0] in df[user_mention][game_played][key]:
+                    df[user_mention][game_played][key][value[0]] += 1
+                else:
+                    df[user_mention][game_played][key][value[0]] = 1
+            elif type(value) == int:
+                df[user_mention][game_played][key] += value
+            else:
+                df[user_mention][game_played][key] = value
+                print("! not int or strng")
+
+    with open('modules/scores.json', 'w') as f:  # likely to cause issues! race condition
+        json.dump(df, f, indent=4)
+
