@@ -65,6 +65,8 @@ async def game(message, client):
         else:
             user_game = 'all'
         await get_stats(message, client, user_mention, user_game)
+    elif args[0] in ['leaderboard', 'leader', 'top', 'l']:
+        await get_leaderboard(message, client)
 
 
 def get_diff_from_arg(arg: str) -> int:
@@ -388,6 +390,7 @@ async def flag_guesser(message, client, difficulty=0, game_time=15):
 
 
 async def flag_guesser_multi(message, client, difficulty=0, points_to_win=5, game_time=15):
+    points_to_win = max(min(points_to_win, 30), 2)
     msg1 = await message.channel.send(f'Get ready to guess the flag! The first person to correctly guess {points_to_win} flags wins!')
     type_f = ["country", "country", "country", "country", "state", "flag", "flag", "Japanese Prefecture", "flag",
               "flag", "flag", "flag"]
@@ -467,7 +470,6 @@ async def flag_guesser_multi(message, client, difficulty=0, points_to_win=5, gam
         rounds_played += 1
 
 
-
 async def geography_game(message, client, area="japan", mode="map", game_time=15):
     if area == "":
         print("empty area")
@@ -542,12 +544,15 @@ async def get_stats(message, client, user_mention, user_game):
 
         try:
             embed.add_field(name=f"Rounds won in multiplayer:", value=f"{db[user_mention]['flag']['rounds_won']}")
-            embed.add_field(name=f"Games won in multiplayer:", value=f"{db[user_mention]['flag']['games_won']}")
         except:
             embed.add_field(name=f"Rounds won in multiplayer:", value=f"0")
+        try:
+            embed.add_field(name=f"Games won in multiplayer:", value=f"{db[user_mention]['flag']['games_won']}")
+        except:
             embed.add_field(name=f"Games won in multiplayer:", value=f"0")
 
         sent_embed = await message.channel.send(embed=embed)
+
     elif user_game == 'geography':
         pass
     else:  # general
@@ -564,6 +569,77 @@ async def get_stats(message, client, user_mention, user_game):
 
         embed.add_field(name=f'Flags correctly guessed:', value=f'{total}')
         sent_embed = await message.channel.send(embed=embed)
+
+
+async def get_leaderboard(message, client):
+    sent = await message.channel.send('Processing... (This may take a while!)')
+    with open('modules/scores.json') as f:
+        db = json.load(f)
+
+    temp = []
+    temp2 = []
+    temp3 = []
+
+    t = time.time()
+
+    a = None
+    for u, _ in db.items():
+        a = u
+
+    for user, d in db.items():
+        print(f"{user}:%.2f seconds (%.3f minutes)" % (((time.time() - t), (time.time() - t) / 60)))
+        if user == a:  # without this the command can take 10 times longer for some reason
+            break
+        name = str(await username_from_mention(user, client))[:-5]
+        temp.append([d['flag']['total'], name])
+        try:
+            temp3.append([d['flag']['rounds_won'], name])
+        except:
+            continue
+        try:
+            temp2.append([d['flag']['games_won'], name])
+        except:
+            continue
+        # print(f'{user} is here')
+
+
+    print("\nMade lists in in %.2f seconds (%.3f minutes)" % (((time.time() - t), (time.time() - t) / 60)))
+    t = time.time()
+
+    # print('this is before sorting')
+
+    temp.sort(key=lambda y: y[0], reverse=True)
+    temp2.sort(key=lambda y: y[0], reverse=True)
+    temp3.sort(key=lambda y: y[0], reverse=True)
+
+    # print('this is after sorting')
+
+    embed = discord.Embed(title=f"Global Leaderboard")
+    embed.set_footer(
+        text=f"Stat collection started 3/23/2021")
+    embed.colour = discord.Colour.gold()
+    embed.type = "rich"
+
+    str_ = ""
+    for total, name in temp[:10]:
+        str_ += f"{name}: {total}\n"
+    embed.add_field(name="__Total Flags__", value=str_)
+
+    str_ = ""
+    for total, name in temp3[:10]:
+        str_ += f"{name}: {total}\n"
+    embed.add_field(name="__Flag Rounds Won__", value=str_)
+
+    str_ = ""
+    for total, name in temp2[:10]:
+        str_ += f"{name}: {total}\n"
+    embed.add_field(name="__Flag Games Won__", value=str_)
+
+    # print("\nSorted and added to embed in in %.5f seconds (%.3f minutes)" % (((time.time() - t), (time.time() - t) / 60)))
+
+    await sent.delete()
+
+    sent_embed = await message.channel.send(embed=embed)
 
 
 def increment_user(user_mention, game_played: str, **kwargs):
