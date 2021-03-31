@@ -251,9 +251,19 @@ async def weezer(ctx):
     await imagefun.weezer_imagemaker(ctx.message)
 
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send('Sorry, this command is on cooldown! Try again in {:.2f} seconds'.format(error.retry_after))
+
+
+@commands.cooldown(1, 5, commands.BucketType.guild)
 @bot.command(aliases=["g"])
 async def game(ctx):
-    await games.game(ctx.message, bot)
+    try:
+        await games.game(ctx.message, bot)
+    except Exception as e:
+        await ctx.send(str(e))
 
 
 @bot.command(aliases=["torgb", "2rgb"])
