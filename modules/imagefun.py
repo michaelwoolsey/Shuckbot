@@ -1,5 +1,5 @@
 import discord
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageColor
 import requests
 from io import BytesIO
 import re

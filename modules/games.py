@@ -8,12 +8,15 @@ from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cmc
 import asyncio
 import requests
+import geocoder
+from geopy import distance
+import aiohttp
 from io import BytesIO
 import json
 from typing import Optional, List, Any
 
 
-async def game(message, client):
+async def game(message, client, key):
     try:
         args = [x.lower() for x in message.clean_content[1:].split(' ')][1:]
     except IndexError:
@@ -67,6 +70,9 @@ async def game(message, client):
         await get_stats(message, client, user_mention, user_game)
     elif args[0] in ['leaderboard', 'leader', 'top', 'l']:
         await get_leaderboard(message, client)
+    elif args[0] in ['geoguesser', 'geoguessr', 'gg']:
+        await geoguesser_game(message, client, key, *args[1:2])
+
 
 
 def get_diff_from_arg(arg: str) -> int:
@@ -125,6 +131,23 @@ async def username_from_mention(mention, client) -> str:
     name = str(mention)[2:-1].replace("!", "")
     name = await client.fetch_user(int(name))
     return str(name)
+
+
+# taken from https://github.com/yfxu/anui/blob/main/bot/cogs/utils/mapquest.py
+class Mapquest(object):
+    """docstring for Mapquest"""
+    def __init__(self, key):
+        self.key = key
+
+    async def get_geocoding(self, location):
+        params = {
+            'key': self.key,
+            'location': location
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.get('http://www.mapquestapi.com/geocoding/v1/address', params=params) as r:
+                if r.status == 200:
+                    return await r.json()
 
 
 async def colour_guesser(message, client, _letter=""):
@@ -470,6 +493,143 @@ async def flag_guesser_multi(message, client, difficulty=0, points_to_win=5, gam
         rounds_played += 1
 
 
+def geoguesser_points(x):
+    # calculates points for geoguessr somehow
+    # a,b,c,c3,a3,d,e,c1,a1,f,c2,a2,g,a4,g4,c4,a5,g5,c5,a6,g6,c6,a7,g7,c7,a8,g8,c8,a9,g9,c9=2330,-490,380,170,25,0,np.e,3060,300,-10,345,2850,-20,141.29,0,1000,900,180.7,120,-2.6,-1.6,12.8,-340,484,200,107,0,2200,480,680,600
+    # return max(min(int(a*e**(-0.5*((x-b)/c)**2) + a3*e**(-0.5*((x-d)/c3)**2) + a1*e**(-0.5*((x-f)/c1)**2) + a2*e**(-0.5*((x-g)/c2)**2) + a4*e**(-0.5*((x-g4)/c4)**2) + a5*e**(-0.5*((x-g5)/c5)**2) + a6*e**(-0.5*((x-g6)/c6)**2) + a7*e**(-0.5*((x-g7)/c7)**2) + a8*e**(-0.5*((x-g8)/c8)**2) + a9*e**(-0.5*((x-g9)/c9)**2)),5000),0)
+    # a, b, c, c3, a3, d, e, c1, a1, f, c2, a2, g, a4, g4, c4, a5, g5, c5, a6, g6, c6, a7, g7, c7, a8, g8, c8 = 2330, -490, 380, 170, 25, 0, np.e, 3060, 300, -10, 380, 3150, -20, 156, 480, 1000, 900, 180.7, 120, -2.6, -1.6, 12.8, -340, 484, 200, 107, 0, 2200
+    # return max(min(int(a * e ** (-0.5 * ((x - b) / c) ** 2) + a3 * e ** (-0.5 * ((x - d) / c3) ** 2) + a1 * e ** (
+    #             -0.5 * ((x - f) / c1) ** 2) + a2 * e ** (-0.5 * ((x - g) / c2) ** 2) + a4 * e ** (
+    #                                -0.5 * ((x - g4) / c4) ** 2) + a5 * e ** (-0.5 * ((x - g5) / c5) ** 2) + a6 * e ** (
+    #                                -0.5 * ((x - g6) / c6) ** 2) + a7 * e ** (-0.5 * ((x - g7) / c7) ** 2) + a8 * e ** (
+    #                                -0.5 * ((x - g8) / c8) ** 2)), 5000), 0)
+    # a, a1, a2, a3, a4, a5, a6, a7 = [4817.435, 914, 760, 160, 210, 37, -41.81, 43]
+    # b, b1, b2, b3, b4, b5, b6, b7 = [-49, 1400, 3040, 2380, 6600, 2800, 63, 8500]
+    # c, c1, c2, c3, c4, c5, c6, c7 = [670, 620, 1740, 600, 1000, 530, 364, 767]
+    # d, d4 = [-0.5, -0.3]
+    a = [4817.435, 914, 760, 160, 210, 37, -41.81, 43]
+    b = [-49, 1400, 3040, 2380, 6600, 2800, 63, 8500]
+    c = [670, 620, 1740, 600, 1000, 530, 364, 767]
+    d = [-0.5, -0.5, -0.5, -0.5, -0.3, -0.5, -0.5, -0.5]
+
+    def norm(a_, b_, c_, d_):
+        return a_ * np.e**(d_*((x-b_)/c_)**2)
+
+    pts = 0.0
+    for i in range(len(a)):
+        pts += norm(a[i], b[i], c[i], d[i])
+    return pts
+
+
+def make_3_map(g, filename):
+    guess_data = dict(g.json)
+    map_url = guess_data['raw']['mapUrl']
+    idx = guess_data['raw']['mapUrl'].find('zoom=') + 6
+
+    if map_url[idx] != '&':
+        idx2 = idx + 1
+    else:
+        idx2 = idx
+
+    map1 = Image.open(BytesIO(requests.get(map_url[:idx - 1] + '13' + map_url[idx2:]).content))
+    map2 = Image.open(BytesIO(requests.get(map_url[:idx - 1] + '7' + map_url[idx2:]).content))
+    map3 = Image.open(BytesIO(requests.get(map_url[:idx - 1] + '2' + map_url[idx2:]).content))
+
+    img = Image.new("RGB", (map1.width + map2.width + map3.width + 4, map1.height), 'black')
+    img.paste(map1)
+    img.paste(map2, (map1.width + 2, 0))
+    img.paste(map3, (2 * map1.width + 4, 0))
+    img.save(filename)
+
+
+async def geoguesser_game(message, client, key, game_time=60):
+    with open('modules/geoguessing.json') as f:
+        gg = json.load(f)
+    idx = random.randint(0, len(gg)-1)
+    loc = gg[idx]
+
+    game_time = max(10, min(600, int(game_time))) if str(game_time).isnumeric() else 60
+
+    embed_colour = [random.randint(0, 255) for _ in range(3)]
+
+    embed_intro = discord.Embed(
+        title=f"Here's your location! You have {game_time} seconds to guess the latitude, longitude pair, or enter a city/country!")
+    embed_intro.colour = discord.Color.from_rgb(*embed_colour)
+    embed_intro.type = "rich"
+    embed_intro.set_footer(text='NOTE: your next message will count as your answer!')
+    Image.open(BytesIO(requests.get(loc['url']).content)).save('location.png')
+    embed_intro.set_image(url="attachment://location.png")
+    await message.channel.send(embed=embed_intro, file=discord.File("location.png"))
+
+    def check(m):
+        return m.author == message.author and m.channel == message.channel
+
+    def get_title(pts):
+        if pts == 5000:
+            return random.choice(['Phenomenal job', 'This is so poggers', 'Unbelievable', 'Very cool very swag', 'Incredible', 'Congratulations'])
+        elif pts > 3000:
+            return random.choice(['Great job', 'Excellent work', 'Nice', 'Super'])
+        elif pts > 1000:
+            return random.choice(['Good effort', 'Alright', 'Perfectly adequate', 'Satisfactory', 'Not too bad', 'Cool'])
+        elif pts > 100:
+            return random.choice(['Nice try', 'Better luck next time', 'Good attempt', 'Not quite there'])
+        elif pts > 0:
+            return random.choice(['Ouch', 'Yikes', 'Not great', 'Unlucky', 'Unfortunate'])
+        else:
+            return random.choice(['Abysmal', "Wow that's horrible", 'Horrible job', 'Really off the mark on this one', "You couldn't have done any worse if you tried"])
+
+    msg = message
+    guesses = 0
+    t = time.time()
+
+    while msg.content.lower() not in ['yes', 'y', 'confirm']:
+        try:
+            msg = await client.wait_for('message', check=check, timeout=game_time - (time.time() - t))
+            if msg.content.lower() in ['yes', 'y', 'confirm'] and guesses > 0:
+                break
+            guesses += 1
+
+            embed = discord.Embed(title="Type yes (or y) to confirm your guess, otherwise, keep on guessing! You have %.2f seconds (%.3f minutes) left" % (game_time - (time.time() - t), game_time/60 - (time.time() - t) / 60))
+            embed.colour = discord.Color.from_rgb(*embed_colour)
+            embed.type = "rich"
+
+            g = geocoder.mapquest(msg.clean_content, key=key)
+            embed.set_footer(text=f"Current guess lat/long: {g.lat}, {g.lng}")
+
+            make_3_map(g, 'map_user_guess.png')
+            embed.set_image(url="attachment://map_user_guess.png")
+            await message.channel.send(embed=embed, file=discord.File("map_user_guess.png"))
+
+        except asyncio.TimeoutError:
+            await message.channel.send(f"Time's up!")
+            break
+
+    if msg != message:
+        actual_ll = (loc['lat'], loc['long'])
+        guess_ll = (g.lat, g.lng)
+        dist = distance.distance(actual_ll, guess_ll)
+        pts = int(geoguesser_points(dist.km))
+        gold_stars = 1 if pts == 5000 else 0
+
+        final_embed = discord.Embed()
+        final_embed.colour = discord.Color.from_rgb(*embed_colour)
+        final_embed.type = "rich"
+        final_embed.add_field(name=f'Points', value=f"{pts}{' :star: '*gold_stars}")
+        final_embed.add_field(name=f'Distance', value='%.3f km, (%.3f miles)' % (dist.km, dist.miles))
+        final_embed.set_footer(text=f"Correct Lat/long: {loc['lat']}, {loc['long']}")
+        make_3_map(geocoder.mapquest(f"{loc['lat']}, {loc['long']}", key=key), 'final_map.png')
+        final_embed.set_image(url="attachment://final_map.png")
+        await message.channel.send(get_title(pts) + f' {msg.author.mention}!')
+        await message.channel.send(embed=final_embed, file=discord.File("final_map.png"))
+
+        increment_user(msg.author.mention, 'geoguesser', total=1, total_points=pts, gold_stars=gold_stars,
+                       total_distance=dist.km, avg_pointsA=pts, avg_distanceA=dist.km)
+
+
+async def geoguesser_multiplayer(message, client, key, game_time=60):
+    pass
+
+
 async def geography_game(message, client, area="japan", mode="map", game_time=15):
     if area == "":
         print("empty area")
@@ -572,7 +732,7 @@ async def get_stats(message, client, user_mention, user_game):
 
 
 async def get_leaderboard(message, client):
-    sent = await message.channel.send('Processing... (This may take a while!)')
+    sent = await message.channel.send('Processing... (This may slow down the bot when it\'s called, so it might take a while)')
     with open('modules/scores.json') as f:
         db = json.load(f)
 
@@ -644,8 +804,10 @@ async def get_leaderboard(message, client):
 
 def increment_user(user_mention, game_played: str, **kwargs):
     # kwargs will contain any information important to the game
-    # game_played MUST be one of 'color', 'flag', or 'geography'
-    GAMES = ['color', 'flag', 'geography']
+    # game_played MUST be one of 'color', 'flag', 'geography', or 'geoguessr'
+    # print('incrementing user', game_played)
+
+    GAMES = ['color', 'flag', 'geography', 'geoguesser']
     if game_played not in GAMES:
         print('u messed up mikey')
         return
@@ -664,6 +826,12 @@ def increment_user(user_mention, game_played: str, **kwargs):
         for game__ in GAMES:
             df[user_mention][game__] = {}
 
+    # print(df[user_mention][game_played])
+
+    if game_played not in df[user_mention]:
+        print('game played not in df for user')
+        df[user_mention][game_played] = {}
+
     if df[user_mention][game_played] == {}:  # uninitialized
         for key, value in kwargs.items():
             # print(key, value)
@@ -674,6 +842,7 @@ def increment_user(user_mention, game_played: str, **kwargs):
             elif isinstance(value, list):
                 df[user_mention][game_played][key] = {value[0]: 1}
             else:
+                # print('making new incrementing')
                 df[user_mention][game_played][key] = value
 
     else:  # game played before
@@ -695,11 +864,16 @@ def increment_user(user_mention, game_played: str, **kwargs):
                     df[user_mention][game_played][key][value[0]] += 1
                 else:
                     df[user_mention][game_played][key][value[0]] = 1
-            elif type(value) == int:
-                try:
-                    df[user_mention][game_played][key] += value
-                except KeyError:
-                    df[user_mention][game_played][key] = value
+            elif type(value) == int or type(value) == float:
+                if key[-1] == 'A':  # cumulative mean, requires the total to be initialized and incremented first
+                    # print('doing cumulative mean')
+                    n = df[user_mention][game_played]['total']
+                    df[user_mention][game_played][key] = (value + (n-1) * df[user_mention][game_played][key]) / n
+                else:
+                    try:
+                        df[user_mention][game_played][key] += value
+                    except KeyError:
+                        df[user_mention][game_played][key] = value
             else:
                 df[user_mention][game_played][key] = value
                 print("! not int or string")

@@ -261,9 +261,9 @@ async def on_command_error(ctx, error):
 @bot.command(aliases=["g"])
 async def game(ctx):
     try:
-        await games.game(ctx.message, bot)
+        await games.game(ctx.message, bot, params["mapquest"])
     except Exception as e:
-        await ctx.send(str(e))
+        await ctx.send('An error has occured: ' + str(e))
 
 
 @bot.command(aliases=["torgb", "2rgb"])
