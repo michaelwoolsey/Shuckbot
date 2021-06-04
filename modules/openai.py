@@ -10,7 +10,7 @@ openai.api_key = params["openaiKey"]
 prompt0 = "The following is a conversation with a tsundere AI. " \
          "The AI is cute, embarassed, and stubborn. " \
          "\n\nHuman: Hello, who are you?" \
-         "\nAI: I'm not a tsundere! It's not like i like you or anything baka! Hmph. What do you want? \nHuman: "
+         "\nAI: I'm not a tsundere! It's not like I like you or anything baka! Hmph. What do you want? \nHuman: "
 
 prompt6 = "The following is a conversation with a Top Canadian osu! Player named Trevrasher, who is also often known as by the name Trevor or his nickname Trev. " \
          'Trevrasher is known for his speed plays, with his primary mod being DoubleTime (DT). Trev hates Hidden (HD) players and calls them "Hidden Abusers". ' \
@@ -64,13 +64,13 @@ def response(message, username):
 
 
 async def change_prompt(message):
+    if len(message.clean_content[1:].split(' ')) == 1:
+        await message.channel.send(f'Shuckbot is currently in "{get_prompt(message)}" mode!')
     arg = [x.lower() for x in message.clean_content[1:].split(' ')][1]
     if arg not in list(prompts.keys()):
         embed = discord.Embed(title=f"Shuckbot chat modes")
-        counter = 0
         for k, v in prompts.items():
             embed.add_field(name=k, value=v[1], inline=False)
-            counter += 1
         embed.set_footer(text=f'Do ";prompt <name>" to set the prompt!')
         embed.colour = discord.Color.gold()
         embed.type = "rich"
@@ -79,3 +79,5 @@ async def change_prompt(message):
     pDB = TinyDB('prompt.json')
     pDB.update({'prompt': arg}, Query().id == message.guild.id)
     await message.channel.send("Set Shuckbot prompt to \"" + arg + "\".")
+
+
