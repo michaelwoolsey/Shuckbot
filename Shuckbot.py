@@ -1,11 +1,13 @@
 import logging
+import sys
+import traceback
 from datetime import datetime
 from tinydb import TinyDB, Query
 
 import discord
 from discord.ext import commands
 
-from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, games, parameters
+from modules import tags, imagesearch, metar, imagefun, help, picturebook, cleverbot, games, parameters, openai
 
 params = parameters.params
 
@@ -31,6 +33,9 @@ def process_prefix(p_bot, message):
 bot = commands.Bot(command_prefix=process_prefix, intents=discord.Intents.default())
 bot.remove_command("help")  # discord.py ships with a default help command: must remove it
 
+@bot.command()
+async def engines(ctx):
+    openai.engine_list()
 
 @bot.command(aliases=["shuckbotprefix", "shuckprefix"])
 async def prefix(ctx, *args):
@@ -263,7 +268,8 @@ async def game(ctx):
     try:
         await games.game(ctx.message, bot, params["mapquest"])
     except Exception as e:
-        await ctx.send('An error has occured: ' + str(e))
+        await ctx.send(f'An error has occured! Go yell at @michaeL#9999 to fix it. You should also give him this:')
+        await ctx.send(f'```{traceback.format_exc()}```')
 
 
 @bot.command(aliases=["torgb", "2rgb"])
@@ -296,6 +302,11 @@ async def sickos(ctx):
     await imagefun.sickos_imagemaker(ctx.message)
 
 
+@bot.command(aliases=['prompt', 'setprompt', 'mode'])
+async def changeprompt(ctx):
+    await openai.change_prompt(ctx.message)
+
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -309,7 +320,12 @@ async def on_message(message):
         await imagesearch.stop(message)
 
     elif message.clean_content.startswith("@" + message.guild.get_member(bot.user.id).display_name):
-        await message.channel.send(
-            cleverbot.cleverbot_message(message, message.guild.get_member(bot.user.id).display_name))
+        await message.channel.trigger_typing()
+        try:
+            await message.channel.send(
+                # cleverbot.cleverbot_message(message, message.guild.get_member(bot.user.id).display_name))
+                openai.response(message, message.guild.get_member(bot.user.id).display_name))
+        except discord.HTTPException:
+            await message.channel.send("guh")
 
 bot.run(params["token"])
