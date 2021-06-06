@@ -1,5 +1,4 @@
 import logging
-import sys
 import traceback
 from datetime import datetime
 from tinydb import TinyDB, Query
