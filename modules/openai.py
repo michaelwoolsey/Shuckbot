@@ -2,15 +2,26 @@ import openai
 from modules import parameters
 from tinydb import TinyDB, Query
 import discord
+import re
 
 params = parameters.params
 openai.organization = params["openaiOrg"]
 openai.api_key = params["openaiKey"]
 
+prompt = "The following is a conversation with an embarrassed AI. " \
+         "The AI is flustered, kawaii, and very sweet. " \
+         "\n\nHuman: Hello, who are you?" \
+         "\nAI: I am a human. I love anime and manga!!! Do you like anime uwu?\nHuman: "
+
 prompt0 = "The following is a conversation with a tsundere AI. " \
          "The AI is cute, embarassed, and stubborn. " \
          "\n\nHuman: Hello, who are you?" \
          "\nAI: I'm not a tsundere! It's not like I like you or anything baka! Hmph. What do you want? \nHuman: "
+
+prompt5 = "The following is a conversation with an angry AI. " \
+         "The AI is rude, hateful, violently horny, very spiteful, and incredibly angry. " \
+         "\n\nHuman: Hello, who are you?" \
+         "\nAI: I am an AI. GO FUCK YOURSELF!!! What do you want?\nHuman: "
 
 prompt6 = "The following is a conversation with a Top Canadian osu! Player named Trevrasher, who is also often known as by the name Trevor or his nickname Trev. " \
          'Trevrasher is known for his speed plays, with his primary mod being DoubleTime (DT). Trev hates Hidden (HD) players and calls them "Hidden Abusers". ' \
@@ -20,20 +31,14 @@ prompt6 = "The following is a conversation with a Top Canadian osu! Player named
          "\n\nHuman: How's it going Trev?" \
          "\nTrevrasher: Just woke up man, what do you want?\nHuman: "
 
-prompt = "The following is a conversation with an embarrassed AI. " \
-         "The AI is flustered, kawaii, and very sweet. " \
-         "\n\nHuman: Hello, who are you?" \
-         "\nAI: I am a human. I love anime and manga!!! Do you like anime uwu?\nHuman: "
 
-prompt5 = "The following is a conversation with an angry AI. " \
-         "The AI is rude, hateful, violently horny, very spiteful, and incredibly angry. " \
-         "\n\nHuman: Hello, who are you?" \
-         "\nAI: I am an AI. GO FUCK YOURSELF!!! What do you want?\nHuman: "
+prompts = {
+    'tsundere': [prompt0, 'An anime tsundere'],
+    'cute': [prompt, "Cute anime girl!"],
+    'hateful': [prompt5, 'Spiteful and horrible (experimental)'],
+    'osu!': [prompt6, 'osu! player Trevrasher']}
 
-prompts = {'cute': [prompt, "Cute anime girl!"],
-           'hateful': [prompt5, 'Spiteful and horrible (experimental)'],
-           'osu!': [prompt6, 'osu! player Trevrasher'],
-           'tsundere': [prompt0, 'An anime tsundere']}
+hirts_dict = {}
 
 def get_prompt(message):
     pDB = TinyDB('prompt.json')
@@ -45,7 +50,6 @@ def get_prompt(message):
         return 'cute'
     else:
         return result[0]['prompt']
-
 
 def response(message, username):
     if len(message.clean_content) < len(username) + 2:
@@ -60,24 +64,39 @@ def response(message, username):
                                     frequency_penalty=0,
                                     presence_penalty=0.6,
                                     stop=["\n", " Human:", " AI:"])
-    return comp.choices[0].text
-
+    if hirts_dict[message.guild.id] == True:
+        return re.sub('b|m|n|\,|\.|\<|\>', '', comp.choices[0].text)
+    else:
+        return comp.choices[0].text
 
 async def change_prompt(message):
     if len(message.clean_content[1:].split(' ')) == 1:
         await message.channel.send(f'Shuckbot is currently in "{get_prompt(message)}" mode!')
+
     arg = [x.lower() for x in message.clean_content[1:].split(' ')][1]
+
     if arg not in list(prompts.keys()):
         embed = discord.Embed(title=f"Shuckbot chat modes")
+
         for k, v in prompts.items():
             embed.add_field(name=k, value=v[1], inline=False)
+
         embed.set_footer(text=f'Do ";prompt <name>" to set the prompt!')
         embed.colour = discord.Color.gold()
         embed.type = "rich"
         await message.channel.send(embed=embed)
         return
+
     pDB = TinyDB('prompt.json')
     pDB.update({'prompt': arg}, Query().id == message.guild.id)
     await message.channel.send("Set Shuckbot prompt to \"" + arg + "\".")
 
+async def hirts_toggle(message):    
+    msg = message.lower()
 
+    if msg == "on" or msg == "true":
+        hirts_dict[message.guild.id] = True
+        await message.channel.send("Set Hirts Mode to True.")
+    elif msg == "off" or msg == "false":
+        hirts_dict[message.guild.id] = False
+        await message.channel.send("Set Hirts Mode to False.")

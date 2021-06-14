@@ -1,5 +1,4 @@
 import logging
-import sys
 import traceback
 from datetime import datetime
 from tinydb import TinyDB, Query
@@ -296,7 +295,6 @@ async def whatifitwaspurple(ctx):
 async def tomscott(ctx):
     await imagefun.tom_imagemaker(ctx.message)
 
-
 @bot.command()
 async def sickos(ctx):
     await imagefun.sickos_imagemaker(ctx.message)
@@ -306,6 +304,9 @@ async def sickos(ctx):
 async def changeprompt(ctx):
     await openai.change_prompt(ctx.message)
 
+@bot.command(aliases=["hirts"])
+async def changehirts(ctx):
+    await openai.hirts_toggle(ctx.message)
 
 @bot.event
 async def on_message(message):
