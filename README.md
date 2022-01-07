@@ -1,5 +1,5 @@
 # Shuckbot
-A discord bot for some basic commands,image manipulation, and games!
+A discord bot for some basic commands, image manipulation, and games!
 
 Collaboration with @billofbong
 
@@ -8,6 +8,8 @@ Collaboration with @billofbong
 Shuckbot has a variety of commands! You can access a full list on the bot with the command `;help `
 
 For help on a specific command do `;help <command>`
+
+To access different pages of the help menu, type `;help <page number>`
 
 #### Example commands:
 > `;img <search>`  -  Searches google images, produces a navigatable list of 10
@@ -36,6 +38,6 @@ For help on a specific command do `;help <command>`
 
 There are many more commands for you to explore!
 
-Ask either `@_michaeL#9999` or `@billofbong#12021` for an invite to the bot!
+Ask either `@_michaeL#0727` or `@billofbong#2021` for an invite to the bot!
 
-_this bot is in really rough development, so please feel free to submit pull requests or issues!_
+_This bot is still in development, so please feel free to submit pull requests or issues!_
