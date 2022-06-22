@@ -2,7 +2,7 @@ discord.py==1.5.1
 requests==2.23.0
 cairosvg==2.5.1
 google_api_python_client==1.8.3
-numpy==1.18.4
+numpy==1.22.0
 Pillow==9.0.1
 simplejson==3.17.0
 tinydb==4.1.1
