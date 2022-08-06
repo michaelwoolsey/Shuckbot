@@ -6,6 +6,6 @@ numpy==1.18.4
 Pillow==9.0.1
 simplejson==3.17.0
 tinydb==4.1.1
-untangle==1.1.1
+untangle==1.2.1
 cleverbot==2.0.0
 colormath==3.0.0
